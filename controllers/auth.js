@@ -1,4 +1,3 @@
-
 const User = require("../models/User");
 const { StatusCodes } = require("http-status-codes");
 const {
@@ -9,7 +8,7 @@ const {
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
-// REGISTER 
+// REGISTER
 const register = async (req, res) => {
   try {
     const { fullname, email, password, role } = req.body;
@@ -35,7 +34,7 @@ const register = async (req, res) => {
 
     // create new user
     const user = await User.create({
-      name: fullname, 
+      name: fullname,
       email,
       password,
       role,
@@ -64,7 +63,7 @@ const register = async (req, res) => {
   }
 };
 
-//  LOGIN 
+//  LOGIN
 const login = async (req, res) => {
   try {
     const { email, password, role } = req.body;
@@ -113,7 +112,7 @@ const login = async (req, res) => {
   }
 };
 
-// GET PROFILE 
+// GET PROFILE
 const getProfile = async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
