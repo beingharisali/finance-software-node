@@ -1,16 +1,35 @@
-
 const mongoose = require("mongoose");
 
 const SaleSchema = new mongoose.Schema(
-  {
-    saleName: { type: String, required: true },
-    productName: { type: String, required: true },
-    description: { type: String },
-    price: { type: Number, required: true },
-    clientName: { type: String, required: true },
-    rating: { type: Number, min: 1, max: 5 },
-    review: { type: String },
-    date: { type: Date, required: true },
+{
+    productType: {
+      type: String,
+      enum: ["Gold", "Whisky"],
+      required: true,
+    },
+    productId: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    productDescription: {
+      type: String,
+      required: true,
+    },
+    price: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    broker: {
+      type: String,
+      required: true,
+    },
+    commission: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
     agent: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
