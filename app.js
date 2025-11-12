@@ -9,10 +9,13 @@ const authRoutes = require("./routes/auth");
 const saleRoutes = require("./routes/saleRoutes");
 const notFound = require("./middleware/not-found");
 const errorHandlerMiddleware = require("./middleware/error-handler");
+const userRoutes = require("./routes/userRoutes");
 
 app.use(cors());
 app.use(express.json());
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/users", userRoutes);
+
 app.use("/api/v1/sales", saleRoutes);
 
 app.get("/", (req, res) => {

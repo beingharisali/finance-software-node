@@ -26,7 +26,7 @@ const UserSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["admin", "manager", "agent", ],
+      enum: ["admin", "manager", "agent", "broker"],
       default: "agent",
     },
   },
@@ -55,6 +55,7 @@ UserSchema.methods.createJWT = function () {
       userId: this._id,
       name: this.name,
       role: this.role,
+      email: this.email,
     },
     process.env.JWT_SECRET,
     {

@@ -9,17 +9,17 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
 // REGISTER
+
 const register = async (req, res) => {
   try {
     const { fullname, email, password, role } = req.body;
 
-    // validation
     if (!fullname || !email || !password) {
       throw new BadRequestError("Please provide fullname, email, and password");
     }
 
-    // optional role validation
-    const allowedRoles = ["admin", "manager", "agent"];
+    const allowedRoles = ["admin", "manager", "agent", "broker"];
+
     if (role && !allowedRoles.includes(role)) {
       throw new BadRequestError("Invalid role provided");
     }
@@ -32,6 +32,7 @@ const register = async (req, res) => {
         .json({ success: false, msg: "Email already registered" });
     }
 
+    
     // create new user
     const user = await User.create({
       name: fullname,
@@ -82,7 +83,7 @@ const login = async (req, res) => {
       throw new UnauthenticatedError("Invalid credentials");
     }
 
-    // optional role check
+    // role check
     if (role && user.role !== role) {
       return res.status(StatusCodes.BAD_REQUEST).json({
         success: false,
