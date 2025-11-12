@@ -32,7 +32,6 @@ const register = async (req, res) => {
         .json({ success: false, msg: "Email already registered" });
     }
 
-    
     // create new user
     const user = await User.create({
       name: fullname,

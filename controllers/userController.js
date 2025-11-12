@@ -1,17 +1,15 @@
+
 const User = require("../models/User");
 const { StatusCodes } = require("http-status-codes");
-const { BadRequestError, UnauthenticatedError } = require("../errors");
+const { BadRequestError } = require("../errors");
 
-// CREATE USER BY ROLE
+// CREATE USER
 const createUser = async (req, res) => {
   try {
     const { fullname, email, password, role } = req.body;
+    if (!fullname || !email || !password || !role)
+      throw new BadRequestError("Provide all required fields");
 
-    if (!fullname || !email || !password || !role) {
-      throw new BadRequestError("Please provide fullname, email, password, and role");
-    }
-
-    // Who can create which roles
     const creatorRole = req.user.role;
     const allowedRolesByCreator = {
       admin: ["admin", "manager", "agent", "broker"],
@@ -25,17 +23,16 @@ const createUser = async (req, res) => {
       });
     }
 
-    // Check if email already exists
     const existingUser = await User.findOne({ email });
-    if (existingUser) {
+    if (existingUser)
       return res.status(StatusCodes.BAD_REQUEST).json({ success: false, msg: "Email already registered" });
-    }
 
     const user = await User.create({
       name: fullname,
       email,
       password,
       role,
+      createdBy: req.user._id, // store who created this user
     });
 
     res.status(StatusCodes.CREATED).json({
@@ -50,32 +47,35 @@ const createUser = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      success: false,
-      msg: error.message || "User creation failed",
-    });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, msg: error.message });
   }
 };
 
-// FETCH USERS BY ROLE OR ALL
+// GET USERS
 const getUsers = async (req, res) => {
   try {
-    const { role } = req.query; 
-    if (!["admin", "manager"].includes(req.user.role)) {
-      return res.status(StatusCodes.FORBIDDEN).json({ success: false, msg: "Not authorized" });
+    const { role } = req.query;
+    let filter = {};
+
+    // Manager sees only their own created users
+    if (req.user.role === "manager") {
+      filter.createdBy = req.user._id;  // only users created by this manager
     }
 
-    const filter = role ? { role } : {};
-    const users = await User.find(filter).select("-password").sort({ createdAt: -1 });
+    // Filter by role if provided
+    if (role) filter.role = role;
 
-    res.status(StatusCodes.OK).json({
-      success: true,
-      users,
-    });
+    const users = await User.find(filter)
+      .select("-password")
+      .populate("createdBy", "name role") // show who created
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ success: true, users });
   } catch (err) {
     console.error(err);
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, msg: err.message });
+    res.status(500).json({ success: false, msg: err.message });
   }
 };
+
 
 module.exports = { createUser, getUsers };

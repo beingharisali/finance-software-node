@@ -29,6 +29,7 @@ const UserSchema = new mongoose.Schema(
       enum: ["admin", "manager", "agent", "broker"],
       default: "agent",
     },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, 
   },
   {
     timestamps: true,
