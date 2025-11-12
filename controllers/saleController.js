@@ -6,20 +6,13 @@ const { StatusCodes } = require("http-status-codes");
 exports.createSale = async (req, res) => {
   try {
     const {
-      saleName,
-      productName,
-      description,
-      price,
-      clientName,
-      rating,
-      review,
-      date,
+      productType, productId, productDescription, price, broker, commission
     } = req.body;
 
-    const agentId = req.user.userId; // from authentication middleware
+    const agentId = req.user.userId; 
 
-    // Validate required fields
-    if (!saleName || !productName || !price || !clientName || !date) {
+ 
+    if (!productType || !productId || !productDescription || !price || !broker || !commission) {
       return res.status(StatusCodes.BAD_REQUEST).json({
         success: false,
         message: "Missing required fields",
@@ -27,15 +20,13 @@ exports.createSale = async (req, res) => {
     }
 
     const sale = new Sale({
-      saleName,
-      productName,
-      description,
-      price,
-      clientName,
-      rating,
-      review,
-      date,
-      agent: agentId,
+  productType,
+  productId,
+  productDescription,
+  price,
+  broker,
+  commission,
+  agent: agentId,
     });
 
     await sale.save();
