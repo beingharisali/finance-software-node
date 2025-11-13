@@ -32,7 +32,7 @@ const register = async (req, res) => {
 
     // create new user
     const user = await User.create({
-       fullname,
+      fullname,
       email,
       password,
       role,

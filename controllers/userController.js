@@ -1,4 +1,3 @@
-
 // Admin aur Manager ke through users create/fetch karna
 const User = require("../models/User");
 const { StatusCodes } = require("http-status-codes");
@@ -62,17 +61,20 @@ const getUsers = async (req, res) => {
     const { role } = req.query;
     let filter = {};
 
-    // Manager sees only their own created users
+    // if (req.user.role === "manager") {
+    //   filter.createdBy = req.user.userId;
+    // }
+    // Manager sees only their own created users but problem h.
     if (req.user.role === "manager") {
-      filter.createdBy = req.user._id; 
+      filter.createdBy = req.user._id;
     }
 
-    // Filter by role if provided
+    // Filter by role agr provided hain
     if (role) filter.role = role;
 
     const users = await User.find(filter)
       .select("-password")
-      .populate("createdBy", "fullname role") 
+      .populate("createdBy", "fullname role")
       .sort({ createdAt: -1 });
 
     res.status(200).json({ success: true, users });
