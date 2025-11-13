@@ -9,7 +9,6 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
 // REGISTER
-
 const register = async (req, res) => {
   try {
     const { fullname, email, password, role } = req.body;
@@ -24,7 +23,6 @@ const register = async (req, res) => {
       throw new BadRequestError("Invalid role provided");
     }
 
-    // check if email already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res
@@ -32,10 +30,9 @@ const register = async (req, res) => {
         .json({ success: false, msg: "Email already registered" });
     }
 
-    
     // create new user
     const user = await User.create({
-      name: fullname,
+       fullname,
       email,
       password,
       role,
@@ -43,17 +40,13 @@ const register = async (req, res) => {
 
     // create token
     const token = user.createJWT();
-
-    res.status(StatusCodes.CREATED).json({
+    res
+    .status(StatusCodes.CREATED)
+    .json({ 
       success: true,
       msg: "User registered successfully",
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
-      token,
+      user: {id: user._id, fullname: user.fullname, email: user.email, role: user.role }, token
+
     });
   } catch (error) {
     console.error(error);
@@ -92,18 +85,13 @@ const login = async (req, res) => {
     }
 
     const token = user.createJWT();
-
-    res.status(StatusCodes.OK).json({
-      success: true,
+    res
+    .status(StatusCodes.OK)
+    .json({ 
+        success: true,
       msg: "User logged in successfully",
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
-      token,
-    });
+    user: { id: user._id, fullname: user.fullname, email: user.email, role: user.role }, token });
+
   } catch (error) {
     console.error(error);
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
