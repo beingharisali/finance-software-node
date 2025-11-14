@@ -10,11 +10,16 @@ const saleRoutes = require("./routes/saleRoutes");
 const notFound = require("./middleware/not-found");
 const errorHandlerMiddleware = require("./middleware/error-handler");
 const userRoutes = require("./routes/userRoutes");
+const uploadCsvRoute = require("./routes/uploadcsv");
+const transactionRoutes = require("./routes/transactionRoutes");
 
 app.use(cors());
 app.use(express.json());
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/upload-csv", uploadCsvRoute);
+app.use("/api/v1/transactions", transactionRoutes);
+
 
 app.use("/api/v1/sales", saleRoutes);
 
