@@ -1,4 +1,5 @@
 const Transaction = require("../models/Transaction");
+//ye CSV ko JavaScript objects mein convert karta h
 const { parse } = require("csv-parse/sync");
 
 exports.uploadCSV = async (req, res) => {
@@ -7,7 +8,7 @@ exports.uploadCSV = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
     }
-
+// file ko buffer se readable text bnane ke laiye kiya ha 
     const csvContent = req.file.buffer.toString("utf-8");
        console.log("CSV Content:", csvContent);
 
