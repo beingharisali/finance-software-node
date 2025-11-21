@@ -1,9 +1,10 @@
+
 const mongoose = require("mongoose");
 
 const transactionSchema = new mongoose.Schema(
   {
     date: {
-      type: String,   
+      type: Date,   
       required: true,
     },
     description: {
