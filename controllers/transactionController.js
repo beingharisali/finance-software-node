@@ -39,39 +39,68 @@ exports.getTransactions = async (req, res) => {
   }
 };
 
-//  ADD CUSTOM CATEGORY (Permanent)
+// //  ADD CUSTOM CATEGORY (Permanent)
+
+//   ADD CUSTOM CATEGORY (No Transaction)
+// =============================
 exports.addCustomCategory = async (req, res) => {
   try {
     const { categoryName } = req.body;
-
     if (!categoryName || categoryName.trim() === "") {
       return res.status(400).json({ success: false, msg: "Category is required" });
     }
 
-    // Check if category already exists (any transaction)
-    const exists = await Transaction.findOne({ category: categoryName });
+    const cleanCategory = categoryName.trim();
+
+    // Check if category exists in any transaction
+    const exists = await Transaction.findOne({ category: cleanCategory });
     if (exists) {
-      return res.status(200).json({ success: true, msg: "Category already saved" });
+      return res.status(200).json({ success: true, msg: "Category already exists" });
     }
 
-    // Create placeholder transaction to save category permanently
-    await Transaction.create({
-      date: new Date(),
-      description: "Custom Category",
-      category: categoryName,
-      amount: 0,
-    });
-
+    // ✅ DO NOT CREATE TRANSACTION
     res.status(201).json({
       success: true,
-      msg: "Custom category saved successfully",
+      msg: "Category added successfully",
     });
 
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, msg: "Failed to save category" });
+    res.status(500).json({ success: false, msg: "Failed to add category" });
   }
 };
+// exports.addCustomCategory = async (req, res) => {
+//   try {
+//     const { categoryName } = req.body;
+
+//     if (!categoryName || categoryName.trim() === "") {
+//       return res.status(400).json({ success: false, msg: "Category is required" });
+//     }
+
+//     // Check if category already exists (any transaction)
+//     const exists = await Transaction.findOne({ category: categoryName });
+//     if (exists) {
+//       return res.status(200).json({ success: true, msg: "Category already saved" });
+//     }
+
+//     // Create placeholder transaction to save category permanently
+//     await Transaction.create({
+//       date: new Date(),
+//       description: "Custom Category",
+//       category: categoryName,
+//       amount: 0,
+//     });
+
+//     res.status(201).json({
+//       success: true,
+//       msg: "Custom category saved successfully",
+//     });
+
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ success: false, msg: "Failed to save category" });
+//   }
+// };
 
 // DELETE CUSTOM CATEGORY (All Transactions)
 exports.deleteCustomCategory = async (req, res) => {
