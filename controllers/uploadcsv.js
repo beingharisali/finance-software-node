@@ -1,50 +1,61 @@
 
 const Transaction = require("../models/Transaction");
-const { parse } = require("csv-parse/sync");
+const XLSX = require("xlsx");
 const moment = require("moment");
 
 exports.uploadCSV = async (req, res) => {
   try {
-    console.log("Received file:", req.file);
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
     }
 
-    const csvContent = req.file.buffer.toString("utf-8");
-    console.log("CSV Content:", csvContent);
+    // Parse Excel file buffer
+    const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
-    const records = parse(csvContent, {
-      columns: true,
-      skip_empty_lines: true,
-      trim: true,
-    });
-    console.log("Parsed CSV records (sample):", records.slice(0, 5));
-
-    const formattedRecords = records.map((r, index) => {
-      // DD/MM/YYYY format strict parsing
-      const parsedDate = moment(r.Date, "DD/MM/YYYY", true);
+    // Map Excel rows to Transaction schema
+    const formattedRecords = rows.map((r, index) => {
+      // Parse Date (support DD/MM/YYYY format)
+      const parsedDate = moment(r["Transaction Date"], "DD/MM/YYYY", true);
       if (!parsedDate.isValid()) {
-        throw new Error(`Invalid date format in row ${index + 1}: ${r.Date}`);
+        throw new Error(
+          `Invalid date format in row ${index + 1}: ${r["Transaction Date"]}`
+        );
       }
+
+      // Determine Amount (Debit or Credit)
+      let amount = 0;
+      if (r["Debit Amount"] && r["Debit Amount"].toString().trim() !== "") {
+        amount = -Math.abs(Number(r["Debit Amount"])); // Debit = negative
+      } else if (
+        r["Credit Amount"] &&
+        r["Credit Amount"].toString().trim() !== ""
+      ) {
+        amount = Math.abs(Number(r["Credit Amount"])); // Credit = positive
+      }
+
       return {
         date: parsedDate.toDate(),
-        description: r.Description,
-        category: r.Category,
-        amount: Number(r.Amount),
+        description: r["Transaction Description"] || "",
+        category: r["Transaction Type"] || "Uncategorized",
+        amount: amount,
       };
     });
 
-    console.log("Formatted records for DB (sample):", formattedRecords.slice(0, 5));
-
-    // Insert into DB
+    // Save to DB
     await Transaction.insertMany(formattedRecords);
 
     res.status(200).json({
-      message: "CSV uploaded and saved to DB successfully!",
+      message: "Excel uploaded and saved to DB successfully!",
       totalSaved: formattedRecords.length,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
   }
 };
