@@ -19,6 +19,10 @@ const transactionSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+        paymentMethod: { type: String }, // new
+    agent: { type: String },         // new
+    location: { type: String },      // new
+    notes: { type: String },         // new
   },
   { timestamps: true }
 );
