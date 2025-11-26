@@ -3,27 +3,27 @@
 const Transaction = require("../models/Transaction");
 const { v4: uuidv4 } = require("uuid"); // for generating unique transactionId
 
-// GET TRANSACTIONS
+// ---------------------- GET TRANSACTIONS ----------------------
 exports.getTransactions = async (req, res) => {
   try {
     const { category, startDate, endDate, page = 1, limit = 20 } = req.query;
     let filter = {};
 
-    // Filter by category
+    // Filter by category (transactionType)
     if (category && category.trim() !== "") {
-      filter.category = { $regex: category.trim(), $options: "i" };
+      filter.transactionType = { $regex: category.trim(), $options: "i" };
     }
 
     // Filter by date range
     if (startDate || endDate) {
-      filter.date = {};
-      if (startDate) filter.date.$gte = new Date(startDate);
-      if (endDate) filter.date.$lte = new Date(endDate);
+      filter.transactionDate = {};
+      if (startDate) filter.transactionDate.$gte = new Date(startDate);
+      if (endDate) filter.transactionDate.$lte = new Date(endDate);
     }
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const transactions = await Transaction.find(filter)
-      .sort({ date: -1 })
+      .sort({ transactionDate: -1 })
       .skip(skip)
       .limit(parseInt(limit));
 
@@ -43,7 +43,7 @@ exports.getTransactions = async (req, res) => {
   }
 };
 
-// ADD CUSTOM CATEGORY (with placeholder transaction)
+// ---------------------- ADD CUSTOM CATEGORY ----------------------
 exports.addCustomCategory = async (req, res) => {
   try {
     const { categoryName } = req.body;
@@ -55,22 +55,21 @@ exports.addCustomCategory = async (req, res) => {
     const cleanCategory = categoryName.trim();
 
     // Check if category exists
-    const exists = await Transaction.findOne({ category: cleanCategory });
+    const exists = await Transaction.findOne({ transactionType: cleanCategory });
     if (exists) {
       return res.status(200).json({ success: true, msg: "Category already exists" });
     }
 
-    // Create a placeholder transaction to save the category permanently
+    // Create a placeholder transaction to save the category
     await Transaction.create({
       transactionId: uuidv4(),
-      date: new Date(),
-      description: "Custom Category Placeholder",
-      category: cleanCategory,
+      transactionDate: new Date(),
+      transactionDescription: "Custom Category Placeholder",
+      transactionType: cleanCategory,
       amount: 0,
-      paymentMethod: "",
-      agent: "",
-      location: "",
-      notes: "",
+      sortCode: "",
+      accountNumber: "",
+      balance: 0,
     });
 
     res.status(201).json({
@@ -83,7 +82,7 @@ exports.addCustomCategory = async (req, res) => {
   }
 };
 
-// DELETE CUSTOM CATEGORY (all transactions)
+// ---------------------- DELETE CUSTOM CATEGORY ----------------------
 exports.deleteCustomCategory = async (req, res) => {
   try {
     const { categoryName } = req.body;
@@ -92,7 +91,7 @@ exports.deleteCustomCategory = async (req, res) => {
       return res.status(400).json({ success: false, msg: "Category is required" });
     }
 
-    const deleted = await Transaction.deleteMany({ category: categoryName.trim() });
+    const deleted = await Transaction.deleteMany({ transactionType: categoryName.trim() });
 
     res.status(200).json({
       success: true,
