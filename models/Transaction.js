@@ -3,26 +3,13 @@ const mongoose = require("mongoose");
 
 const transactionSchema = new mongoose.Schema(
   {
-    date: {
-      type: Date,   
-      required: true,
-    },
-    description: {
-      type: String,
-      required: true,
-    },
-    category: {
-      type: String,
-      required: true,
-    },
-    amount: {
-      type: Number,
-      required: true,
-    },
-        paymentMethod: { type: String }, // new
-    agent: { type: String },         // new
-    location: { type: String },      // new
-    notes: { type: String },         // new
+    transactionDate: { type: Date, required: true },
+    transactionDescription: { type: String, required: true },
+    transactionType: { type: String, required: true },
+    amount: { type: Number, required: true },
+    sortCode: { type: String, default: "" },
+    accountNumber: { type: String, default: "" },
+    balance: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
