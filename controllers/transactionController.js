@@ -1,7 +1,5 @@
-
-
 // const Transaction = require("../models/Transaction");
-// const { v4: uuidv4 } = require("uuid"); // for generating unique transactionId
+// const { v4: uuidv4 } = require("uuid");
 
 // // ---------------------- GET TRANSACTIONS ----------------------
 // exports.getTransactions = async (req, res) => {
@@ -54,7 +52,7 @@
 
 //     const cleanCategory = categoryName.trim();
 
-//     // Check if category exists
+//     // Check if category exists in any transaction
 //     const exists = await Transaction.findOne({ transactionType: cleanCategory });
 //     if (exists) {
 //       return res.status(200).json({ success: true, msg: "Category already exists" });
@@ -104,8 +102,33 @@
 //   }
 // };
 
+// // ---------------------- UPDATE TRANSACTION CATEGORY ----------------------
+// exports.updateTransactionCategory = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { category } = req.body;
+
+//     if (!category || category.trim() === "") {
+//       return res.status(400).json({ success: false, msg: "Category is required" });
+//     }
+
+//     const txn = await Transaction.findByIdAndUpdate(
+//       id,
+//       { transactionType: category.trim() },
+//       { new: true }
+//     );
+
+//     if (!txn) {
+//       return res.status(404).json({ success: false, msg: "Transaction not found" });
+//     }
+
+//     res.status(200).json({ success: true, msg: "Category updated", transaction: txn });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ success: false, msg: "Error updating category" });
+//   }
+// };
 const Transaction = require("../models/Transaction");
-const { v4: uuidv4 } = require("uuid");
 
 // ---------------------- GET TRANSACTIONS ----------------------
 exports.getTransactions = async (req, res) => {
@@ -113,9 +136,9 @@ exports.getTransactions = async (req, res) => {
     const { category, startDate, endDate, page = 1, limit = 20 } = req.query;
     let filter = {};
 
-    // Filter by category (transactionType)
+    // Filter by user category
     if (category && category.trim() !== "") {
-      filter.transactionType = { $regex: category.trim(), $options: "i" };
+      filter.category = { $regex: category.trim(), $options: "i" };
     }
 
     // Filter by date range
@@ -126,6 +149,7 @@ exports.getTransactions = async (req, res) => {
     }
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
+
     const transactions = await Transaction.find(filter)
       .sort({ transactionDate: -1 })
       .skip(skip)
@@ -142,12 +166,11 @@ exports.getTransactions = async (req, res) => {
       totalCount,
     });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ success: false, msg: "Failed to fetch transactions" });
   }
 };
 
-// ---------------------- ADD CUSTOM CATEGORY ----------------------
+// ---------------------- ADD CATEGORY ----------------------
 exports.addCustomCategory = async (req, res) => {
   try {
     const { categoryName } = req.body;
@@ -156,37 +179,30 @@ exports.addCustomCategory = async (req, res) => {
       return res.status(400).json({ success: false, msg: "Category is required" });
     }
 
-    const cleanCategory = categoryName.trim();
+    const clean = categoryName.trim();
 
-    // Check if category exists in any transaction
-    const exists = await Transaction.findOne({ transactionType: cleanCategory });
+    // Check if already used
+    const exists = await Transaction.findOne({ category: clean });
+
     if (exists) {
-      return res.status(200).json({ success: true, msg: "Category already exists" });
+      return res.status(200).json({
+        success: true,
+        msg: "Category already exists",
+      });
     }
 
-    // Create a placeholder transaction to save the category
-    await Transaction.create({
-      transactionId: uuidv4(),
-      transactionDate: new Date(),
-      transactionDescription: "Custom Category Placeholder",
-      transactionType: cleanCategory,
-      amount: 0,
-      sortCode: "",
-      accountNumber: "",
-      balance: 0,
-    });
-
+    // No placeholder transaction needed
     res.status(201).json({
       success: true,
-      msg: "Custom category saved successfully",
+      msg: "Category added successfully",
+      category: clean,
     });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ success: false, msg: "Failed to add category" });
   }
 };
 
-// ---------------------- DELETE CUSTOM CATEGORY ----------------------
+// ---------------------- DELETE CATEGORY ----------------------
 exports.deleteCustomCategory = async (req, res) => {
   try {
     const { categoryName } = req.body;
@@ -195,32 +211,65 @@ exports.deleteCustomCategory = async (req, res) => {
       return res.status(400).json({ success: false, msg: "Category is required" });
     }
 
-    const deleted = await Transaction.deleteMany({ transactionType: categoryName.trim() });
+    const oldName = categoryName.trim();
+
+    // Update all transactions → Uncategorized
+    const updated = await Transaction.updateMany(
+      { category: oldName },
+      { category: "Uncategorized" }
+    );
 
     res.status(200).json({
       success: true,
-      msg: `Category "${categoryName}" and all its transactions deleted successfully`,
-      deletedCount: deleted.deletedCount,
+      msg: `Category "${oldName}" deleted & transactions updated`,
+      affected: updated.modifiedCount,
     });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ success: false, msg: "Failed to delete category" });
   }
 };
 
-// ---------------------- UPDATE TRANSACTION CATEGORY ----------------------
+// ---------------------- RENAME CATEGORY ----------------------
+exports.renameCategory = async (req, res) => {
+  try {
+    const { oldName, newName } = req.body;
+
+    if (!oldName || !newName) {
+      return res.status(400).json({ success: false, msg: "Both names required" });
+    }
+
+    const cleanNew = newName.trim();
+
+    // Update all transactions using old category
+    const updated = await Transaction.updateMany(
+      { category: oldName.trim() },
+      { category: cleanNew }
+    );
+
+    res.status(200).json({
+      success: true,
+      msg: "Category renamed",
+      updatedCount: updated.modifiedCount,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, msg: "Failed to rename category" });
+  }
+};
+
+// ---------------------- UPDATE TRANSACTION'S CATEGORY ONLY ----------------------
 exports.updateTransactionCategory = async (req, res) => {
   try {
     const { id } = req.params;
     const { category } = req.body;
 
     if (!category || category.trim() === "") {
-      return res.status(400).json({ success: false, msg: "Category is required" });
+      return res.status(400).json({ success: false, msg: "Category required" });
     }
 
+    // Update ONLY the new category field
     const txn = await Transaction.findByIdAndUpdate(
       id,
-      { transactionType: category.trim() },
+      { category: category.trim() },
       { new: true }
     );
 
@@ -228,9 +277,12 @@ exports.updateTransactionCategory = async (req, res) => {
       return res.status(404).json({ success: false, msg: "Transaction not found" });
     }
 
-    res.status(200).json({ success: true, msg: "Category updated", transaction: txn });
+    res.status(200).json({
+      success: true,
+      msg: "Transaction category updated",
+      transaction: txn,
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, msg: "Error updating category" });
+    res.status(500).json({ success: false, msg: "Error updating transaction category" });
   }
 };
