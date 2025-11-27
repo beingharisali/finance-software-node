@@ -17,7 +17,7 @@ router.post("/", authenticateUser, allowRoles("admin", "manager"), createUser);
 router.get("/", authenticateUser, allowRoles("admin", "manager"), getUsers);
 
 // Admin can update users
-router.put("/:id", authenticateUser, allowRoles("admin", "manager"), updateUser);
+router.put("/:id", authenticateUser, allowRoles("admin"), updateUser);
 
 // Admin can delete users
 router.delete("/:id", authenticateUser, allowRoles("admin"), deleteUser);
