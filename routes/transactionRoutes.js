@@ -1,32 +1,29 @@
-// const express = require("express");
-// const router = express.Router();
-// const authenticateUser = require("../middleware/authentication");
-// const { getTransactions ,  addCustomCategory, deleteCustomCategory } = require("../controllers/transactionController");
 
-// router.get("/", authenticateUser, getTransactions);
 
-// // Add custom category
-// router.post("/add-category", authenticateUser, addCustomCategory);
 
-// // Delete custom category
-// router.delete("/delete-category", authenticateUser, deleteCustomCategory);
-
-// module.exports = router;
 const express = require("express");
 const router = express.Router();
-// const auth = require("../middleware/auth");
 const authenticateUser = require("../middleware/authentication");
 const allowRoles = require("../middleware/roleMiddleware");
-const { getTransactions, addCustomCategory, deleteCustomCategory } = require("../controllers/transactionController");
+const {
+  getTransactions,
+  addCustomCategory,
+  deleteCustomCategory,
+  updateTransactionCategory
+} = require("../controllers/transactionController");
 
-// Get transactions → Admin, Manager, Broker
-router.get("/", authenticateUser,  allowRoles("admin", "manager", "broker"), getTransactions);
+// ---------------------- ROUTES ----------------------
 
-// Add custom category → Admin, Manager
-router.post("/add-category", authenticateUser,  allowRoles("admin", "manager"), addCustomCategory);
+// Get transactions → Admin
+router.get("/", authenticateUser, allowRoles("admin"), getTransactions);
 
-// Delete custom category → Admin, Manager
-router.delete("/delete-category", authenticateUser,  allowRoles("admin", "manager"), deleteCustomCategory);
+// Add custom category → Admin
+router.post("/add-category", authenticateUser, allowRoles("admin"), addCustomCategory);
+
+// Delete custom category → Admin
+router.delete("/delete-category", authenticateUser, allowRoles("admin"), deleteCustomCategory);
+
+// Update transaction category → Admin
+router.put("/:id/update-category", authenticateUser, allowRoles("admin"), updateTransactionCategory);
 
 module.exports = router;
-

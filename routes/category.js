@@ -20,10 +20,10 @@ const allowRoles = require("../middleware/roleMiddleware");
 const { getCategories, addCategory, deleteCategory } = require("../controllers/Category");
 
 // Get Categories → All roles
-router.get("/", auth, allowRoles("admin", "manager", "assistant", "broker"), getCategories);
+router.get("/", auth, allowRoles("admin"), getCategories);
 
-// Add/Delete Category → Admin + Manager only
-router.post("/add", auth, allowRoles("admin", "manager"), addCategory);
-router.delete("/delete", auth, allowRoles("admin", "manager"), deleteCategory);
+// Add/Delete Category → Admin
+router.post("/add", auth, allowRoles("admin"), addCategory);
+router.delete("/delete", auth, allowRoles("admin"), deleteCategory);
 
 module.exports = router;
