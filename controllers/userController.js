@@ -1,7 +1,9 @@
 
+
+
 // // const User = require("../models/User");
 // // const { StatusCodes } = require("http-status-codes");
-// // const { BadRequestError } = require("../errors");
+// // const { BadRequestError, UnauthorizedError, NotFoundError } = require("../errors");
 
 // // // ---------------------------
 // // // CREATE USER
@@ -59,20 +61,17 @@
 // // };
 
 // // // ---------------------------
-// // // GET USERS (UPDATED)
+// // // GET USERS
 // // // ---------------------------
 // // const getUsers = async (req, res) => {
 // //   try {
 // //     const { role } = req.query;
 // //     let filter = {};
 
-// //     // Manager → sirf apne banaye hue users dekhega
 // //     if (req.user.role === "manager") {
-// //       filter.createdBy = req.user._id;
+// //       filter.createdBy = req.user.userId;
 // //     }
 
-// //     //  IMPORTANT FIX:
-// //     // role="all" → koi filter apply NA ho
 // //     if (role && role !== "all") {
 // //       filter.role = role;
 // //     }
@@ -82,15 +81,91 @@
 // //       .populate("createdBy", "fullname role")
 // //       .sort({ createdAt: -1 });
 
-// //     res.status(200).json({ success: true, users });
+// //     res.status(StatusCodes.OK).json({ success: true, users });
 // //   } catch (err) {
 // //     console.error(err);
-// //     res.status(500).json({ success: false, msg: err.message });
+// //     res
+// //       .status(StatusCodes.INTERNAL_SERVER_ERROR)
+// //       .json({ success: false, msg: err.message });
 // //   }
 // // };
 
-// // module.exports = { createUser, getUsers };
-// // controllers/userController.js
+// // // ---------------------------
+// // // UPDATE USER
+// // // ---------------------------
+// // const updateUser = async (req, res) => {
+// //   try {
+// //     const { id } = req.params;
+// //     const { fullname, email, role, phone } = req.body;
+
+// //     const userToUpdate = await User.findById(id);
+// //     if (!userToUpdate) throw new NotFoundError("User not found");
+
+// //     // Only admin can change roles
+// //     if (role && req.user.role !== "admin") {
+// //       return res.status(StatusCodes.FORBIDDEN).json({
+// //         success: false,
+// //         msg: "Only admin can change roles",
+// //       });
+// //     }
+
+// //     userToUpdate.fullname = fullname || userToUpdate.fullname;
+// //     userToUpdate.email = email || userToUpdate.email;
+// //     userToUpdate.phone = phone || userToUpdate.phone;
+// //     if (role) userToUpdate.role = role;
+
+// //     await userToUpdate.save();
+
+// //     res.status(StatusCodes.OK).json({
+// //       success: true,
+// //       msg: "User updated successfully",
+// //       user: {
+// //         id: userToUpdate._id,
+// //         fullname: userToUpdate.fullname,
+// //         email: userToUpdate.email,
+// //         role: userToUpdate.role,
+// //         phone: userToUpdate.phone,
+// //       },
+// //     });
+// //   } catch (err) {
+// //     console.error(err);
+// //     res
+// //       .status(StatusCodes.INTERNAL_SERVER_ERROR)
+// //       .json({ success: false, msg: err.message });
+// //   }
+// // };
+
+// // // ---------------------------
+// // // DELETE USER
+// // // ---------------------------
+// // const deleteUser = async (req, res) => {
+// //   try {
+// //     const { id } = req.params;
+
+// //     if (req.user.role !== "admin") {
+// //       return res.status(StatusCodes.UNAUTHORIZED).json({
+// //         success: false,
+// //         msg: "Only admin can delete users",
+// //       });
+// //     }
+
+// //     const deletedUser = await User.findByIdAndDelete(id);
+// //     if (!deletedUser)
+// //       return res.status(StatusCodes.NOT_FOUND).json({
+// //         success: false,
+// //         msg: "User not found",
+// //       });
+
+// //     res.status(StatusCodes.OK).json({ success: true, msg: "User deleted successfully" });
+// //   } catch (err) {
+// //     console.error(err);
+// //     res
+// //       .status(StatusCodes.INTERNAL_SERVER_ERROR)
+// //       .json({ success: false, msg: err.message });
+// //   }
+// // };
+
+// // module.exports = { createUser, getUsers, updateUser, deleteUser };
 // const User = require("../models/User");
 // const { StatusCodes } = require("http-status-codes");
 // const { BadRequestError, UnauthorizedError, NotFoundError } = require("../errors");
@@ -151,20 +226,22 @@
 // };
 
 // // ---------------------------
-// // GET USERS
+// // GET USERS (Updated for Manager & Admin)
 // // ---------------------------
 // const getUsers = async (req, res) => {
 //   try {
-//     const { role } = req.query;
+//     const { role } = req.query; // optional query param to filter by role
 //     let filter = {};
 
-//     // Manager → only users created by them
-//     if (req.user.role === "manager") {
-//       filter.createdBy = req.user.userId;
-//     }
-
+//     // Filter by role if provided
 //     if (role && role !== "all") {
 //       filter.role = role;
+//     }
+
+//     // Admin -> no additional filter
+//     // Manager -> only agents/brokers (created by admin OR manager) 
+//     if (req.user.role === "manager") {
+//       filter.role = filter.role || { $in: ["agent", "broker"] };
 //     }
 
 //     const users = await User.find(filter)
@@ -172,10 +249,12 @@
 //       .populate("createdBy", "fullname role")
 //       .sort({ createdAt: -1 });
 
-//     res.status(200).json({ success: true, users });
+//     res.status(StatusCodes.OK).json({ success: true, users });
 //   } catch (err) {
 //     console.error(err);
-//     res.status(500).json({ success: false, msg: err.message });
+//     res
+//       .status(StatusCodes.INTERNAL_SERVER_ERROR)
+//       .json({ success: false, msg: err.message });
 //   }
 // };
 
@@ -185,25 +264,27 @@
 // const updateUser = async (req, res) => {
 //   try {
 //     const { id } = req.params;
-//     const { fullname, email, role } = req.body;
+//     const { fullname, email, role, phone } = req.body;
 
 //     const userToUpdate = await User.findById(id);
 //     if (!userToUpdate) throw new NotFoundError("User not found");
 
 //     // Only admin can change roles
 //     if (role && req.user.role !== "admin") {
-//       return res
-//         .status(StatusCodes.FORBIDDEN)
-//         .json({ success: false, msg: "Only admin can change roles" });
+//       return res.status(StatusCodes.FORBIDDEN).json({
+//         success: false,
+//         msg: "Only admin can change roles",
+//       });
 //     }
 
 //     userToUpdate.fullname = fullname || userToUpdate.fullname;
 //     userToUpdate.email = email || userToUpdate.email;
+//     userToUpdate.phone = phone || userToUpdate.phone;
 //     if (role) userToUpdate.role = role;
 
 //     await userToUpdate.save();
 
-//     res.status(200).json({
+//     res.status(StatusCodes.OK).json({
 //       success: true,
 //       msg: "User updated successfully",
 //       user: {
@@ -211,11 +292,14 @@
 //         fullname: userToUpdate.fullname,
 //         email: userToUpdate.email,
 //         role: userToUpdate.role,
+//         phone: userToUpdate.phone,
 //       },
 //     });
 //   } catch (err) {
 //     console.error(err);
-//     res.status(500).json({ success: false, msg: err.message });
+//     res
+//       .status(StatusCodes.INTERNAL_SERVER_ERROR)
+//       .json({ success: false, msg: err.message });
 //   }
 // };
 
@@ -226,26 +310,33 @@
 //   try {
 //     const { id } = req.params;
 
-//     // Only admin can delete users
 //     if (req.user.role !== "admin") {
-//       throw new UnauthorizedError("Only admin can delete users");
+//       return res.status(StatusCodes.UNAUTHORIZED).json({
+//         success: false,
+//         msg: "Only admin can delete users",
+//       });
 //     }
 
 //     const deletedUser = await User.findByIdAndDelete(id);
-//     if (!deletedUser) throw new NotFoundError("User not found");
+//     if (!deletedUser)
+//       return res.status(StatusCodes.NOT_FOUND).json({
+//         success: false,
+//         msg: "User not found",
+//       });
 
-//     res.status(200).json({ success: true, msg: "User deleted successfully" });
+//     res.status(StatusCodes.OK).json({ success: true, msg: "User deleted successfully" });
 //   } catch (err) {
 //     console.error(err);
-//     res.status(500).json({ success: false, msg: err.message });
+//     res
+//       .status(StatusCodes.INTERNAL_SERVER_ERROR)
+//       .json({ success: false, msg: err.message });
 //   }
 // };
 
 // module.exports = { createUser, getUsers, updateUser, deleteUser };
-
 const User = require("../models/User");
 const { StatusCodes } = require("http-status-codes");
-const { BadRequestError, UnauthorizedError, NotFoundError } = require("../errors");
+const { BadRequestError, NotFoundError } = require("../errors");
 
 // ---------------------------
 // CREATE USER
@@ -253,11 +344,13 @@ const { BadRequestError, UnauthorizedError, NotFoundError } = require("../errors
 const createUser = async (req, res) => {
   try {
     const { fullname, email, password, role } = req.body;
-    if (!fullname || !email || !password || !role)
+    if (!fullname || !email || !password || !role) {
       throw new BadRequestError("Provide all required fields");
+    }
 
     const creatorRole = req.user.role;
 
+    // Admin can create anyone; Manager can only create agent or broker
     const allowedRolesByCreator = {
       admin: ["admin", "manager", "agent", "broker"],
       manager: ["agent", "broker"],
@@ -266,15 +359,16 @@ const createUser = async (req, res) => {
     if (!allowedRolesByCreator[creatorRole]?.includes(role)) {
       return res.status(StatusCodes.FORBIDDEN).json({
         success: false,
-        msg: `You (${creatorRole}) cannot create a user with role ${role}`,
+        msg: `You (${creatorRole}) cannot create a user with role "${role}"`,
       });
     }
 
     const existingUser = await User.findOne({ email });
-    if (existingUser)
+    if (existingUser) {
       return res
         .status(StatusCodes.BAD_REQUEST)
         .json({ success: false, msg: "Email already registered" });
+    }
 
     const user = await User.create({
       fullname,
@@ -296,24 +390,27 @@ const createUser = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res
-      .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .json({ success: false, msg: error.message });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      msg: error.message,
+    });
   }
 };
 
 // ---------------------------
-// GET USERS
+// GET USERS (Admin + Manager)
 // ---------------------------
 const getUsers = async (req, res) => {
   try {
-    const { role } = req.query;
+    const { role } = req.query; // optional filter
     let filter = {};
 
+    // Manager should only see agents & brokers
     if (req.user.role === "manager") {
-      filter.createdBy = req.user.userId;
+      filter.role = { $in: ["agent", "broker"] };
     }
 
+    // Role filter applied if query param exists
     if (role && role !== "all") {
       filter.role = role;
     }
@@ -324,11 +421,12 @@ const getUsers = async (req, res) => {
       .sort({ createdAt: -1 });
 
     res.status(StatusCodes.OK).json({ success: true, users });
-  } catch (err) {
-    console.error(err);
-    res
-      .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .json({ success: false, msg: err.message });
+  } catch (error) {
+    console.error(error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      msg: error.message,
+    });
   }
 };
 
@@ -371,9 +469,10 @@ const updateUser = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res
-      .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .json({ success: false, msg: err.message });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      msg: err.message,
+    });
   }
 };
 
@@ -384,6 +483,7 @@ const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Only admin can delete users
     if (req.user.role !== "admin") {
       return res.status(StatusCodes.UNAUTHORIZED).json({
         success: false,
@@ -401,9 +501,10 @@ const deleteUser = async (req, res) => {
     res.status(StatusCodes.OK).json({ success: true, msg: "User deleted successfully" });
   } catch (err) {
     console.error(err);
-    res
-      .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .json({ success: false, msg: err.message });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      msg: err.message,
+    });
   }
 };
 
