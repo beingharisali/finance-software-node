@@ -85,10 +85,15 @@ exports.deleteCustomCategory = async (req, res) => {
     const oldName = categoryName.trim();
 
     // Update all transactions → Uncategorized
-    const updated = await Transaction.updateMany(
-      { category: oldName },
-      { category: "Uncategorized" }
-    );
+    // const updated = await Transaction.updateMany(
+    //   { category: oldName },
+    //   // { category: "Uncategorized" }
+    // );
+    await Transaction.updateMany(
+  { category: { $in: [null, "", undefined] } },
+  [{ $set: { category: "$transactionType" } }]
+);
+
 
     res.status(200).json({
       success: true,
