@@ -1,174 +1,343 @@
 
 
 
-// // const User = require("../models/User");
-// // const { StatusCodes } = require("http-status-codes");
-// // const { BadRequestError, UnauthorizedError, NotFoundError } = require("../errors");
+// // // // const User = require("../models/User");
+// // // // const { StatusCodes } = require("http-status-codes");
+// // // // const { BadRequestError, UnauthorizedError, NotFoundError } = require("../errors");
 
-// // // ---------------------------
-// // // CREATE USER
-// // // ---------------------------
-// // const createUser = async (req, res) => {
-// //   try {
-// //     const { fullname, email, password, role } = req.body;
-// //     if (!fullname || !email || !password || !role)
-// //       throw new BadRequestError("Provide all required fields");
+// // // // // ---------------------------
+// // // // // CREATE USER
+// // // // // ---------------------------
+// // // // const createUser = async (req, res) => {
+// // // //   try {
+// // // //     const { fullname, email, password, role } = req.body;
+// // // //     if (!fullname || !email || !password || !role)
+// // // //       throw new BadRequestError("Provide all required fields");
 
-// //     const creatorRole = req.user.role;
+// // // //     const creatorRole = req.user.role;
 
-// //     const allowedRolesByCreator = {
-// //       admin: ["admin", "manager", "agent", "broker"],
-// //       manager: ["agent", "broker"],
-// //     };
+// // // //     const allowedRolesByCreator = {
+// // // //       admin: ["admin", "manager", "agent", "broker"],
+// // // //       manager: ["agent", "broker"],
+// // // //     };
 
-// //     if (!allowedRolesByCreator[creatorRole]?.includes(role)) {
-// //       return res.status(StatusCodes.FORBIDDEN).json({
-// //         success: false,
-// //         msg: `You (${creatorRole}) cannot create a user with role ${role}`,
-// //       });
-// //     }
+// // // //     if (!allowedRolesByCreator[creatorRole]?.includes(role)) {
+// // // //       return res.status(StatusCodes.FORBIDDEN).json({
+// // // //         success: false,
+// // // //         msg: `You (${creatorRole}) cannot create a user with role ${role}`,
+// // // //       });
+// // // //     }
 
-// //     const existingUser = await User.findOne({ email });
-// //     if (existingUser)
-// //       return res
-// //         .status(StatusCodes.BAD_REQUEST)
-// //         .json({ success: false, msg: "Email already registered" });
+// // // //     const existingUser = await User.findOne({ email });
+// // // //     if (existingUser)
+// // // //       return res
+// // // //         .status(StatusCodes.BAD_REQUEST)
+// // // //         .json({ success: false, msg: "Email already registered" });
 
-// //     const user = await User.create({
-// //       fullname,
-// //       email,
-// //       password,
-// //       role,
-// //       createdBy: req.user.userId,
-// //     });
+// // // //     const user = await User.create({
+// // // //       fullname,
+// // // //       email,
+// // // //       password,
+// // // //       role,
+// // // //       createdBy: req.user.userId,
+// // // //     });
 
-// //     res.status(StatusCodes.CREATED).json({
-// //       success: true,
-// //       msg: "User created successfully",
-// //       user: {
-// //         id: user._id,
-// //         fullname: user.fullname,
-// //         email: user.email,
-// //         role: user.role,
-// //       },
-// //     });
-// //   } catch (error) {
-// //     console.error(error);
-// //     res
-// //       .status(StatusCodes.INTERNAL_SERVER_ERROR)
-// //       .json({ success: false, msg: error.message });
-// //   }
-// // };
+// // // //     res.status(StatusCodes.CREATED).json({
+// // // //       success: true,
+// // // //       msg: "User created successfully",
+// // // //       user: {
+// // // //         id: user._id,
+// // // //         fullname: user.fullname,
+// // // //         email: user.email,
+// // // //         role: user.role,
+// // // //       },
+// // // //     });
+// // // //   } catch (error) {
+// // // //     console.error(error);
+// // // //     res
+// // // //       .status(StatusCodes.INTERNAL_SERVER_ERROR)
+// // // //       .json({ success: false, msg: error.message });
+// // // //   }
+// // // // };
 
-// // // ---------------------------
-// // // GET USERS
-// // // ---------------------------
-// // const getUsers = async (req, res) => {
-// //   try {
-// //     const { role } = req.query;
-// //     let filter = {};
+// // // // // ---------------------------
+// // // // // GET USERS
+// // // // // ---------------------------
+// // // // const getUsers = async (req, res) => {
+// // // //   try {
+// // // //     const { role } = req.query;
+// // // //     let filter = {};
 
-// //     if (req.user.role === "manager") {
-// //       filter.createdBy = req.user.userId;
-// //     }
+// // // //     if (req.user.role === "manager") {
+// // // //       filter.createdBy = req.user.userId;
+// // // //     }
 
-// //     if (role && role !== "all") {
-// //       filter.role = role;
-// //     }
+// // // //     if (role && role !== "all") {
+// // // //       filter.role = role;
+// // // //     }
 
-// //     const users = await User.find(filter)
-// //       .select("-password")
-// //       .populate("createdBy", "fullname role")
-// //       .sort({ createdAt: -1 });
+// // // //     const users = await User.find(filter)
+// // // //       .select("-password")
+// // // //       .populate("createdBy", "fullname role")
+// // // //       .sort({ createdAt: -1 });
 
-// //     res.status(StatusCodes.OK).json({ success: true, users });
-// //   } catch (err) {
-// //     console.error(err);
-// //     res
-// //       .status(StatusCodes.INTERNAL_SERVER_ERROR)
-// //       .json({ success: false, msg: err.message });
-// //   }
-// // };
+// // // //     res.status(StatusCodes.OK).json({ success: true, users });
+// // // //   } catch (err) {
+// // // //     console.error(err);
+// // // //     res
+// // // //       .status(StatusCodes.INTERNAL_SERVER_ERROR)
+// // // //       .json({ success: false, msg: err.message });
+// // // //   }
+// // // // };
 
-// // // ---------------------------
-// // // UPDATE USER
-// // // ---------------------------
-// // const updateUser = async (req, res) => {
-// //   try {
-// //     const { id } = req.params;
-// //     const { fullname, email, role, phone } = req.body;
+// // // // // ---------------------------
+// // // // // UPDATE USER
+// // // // // ---------------------------
+// // // // const updateUser = async (req, res) => {
+// // // //   try {
+// // // //     const { id } = req.params;
+// // // //     const { fullname, email, role, phone } = req.body;
 
-// //     const userToUpdate = await User.findById(id);
-// //     if (!userToUpdate) throw new NotFoundError("User not found");
+// // // //     const userToUpdate = await User.findById(id);
+// // // //     if (!userToUpdate) throw new NotFoundError("User not found");
 
-// //     // Only admin can change roles
-// //     if (role && req.user.role !== "admin") {
-// //       return res.status(StatusCodes.FORBIDDEN).json({
-// //         success: false,
-// //         msg: "Only admin can change roles",
-// //       });
-// //     }
+// // // //     // Only admin can change roles
+// // // //     if (role && req.user.role !== "admin") {
+// // // //       return res.status(StatusCodes.FORBIDDEN).json({
+// // // //         success: false,
+// // // //         msg: "Only admin can change roles",
+// // // //       });
+// // // //     }
 
-// //     userToUpdate.fullname = fullname || userToUpdate.fullname;
-// //     userToUpdate.email = email || userToUpdate.email;
-// //     userToUpdate.phone = phone || userToUpdate.phone;
-// //     if (role) userToUpdate.role = role;
+// // // //     userToUpdate.fullname = fullname || userToUpdate.fullname;
+// // // //     userToUpdate.email = email || userToUpdate.email;
+// // // //     userToUpdate.phone = phone || userToUpdate.phone;
+// // // //     if (role) userToUpdate.role = role;
 
-// //     await userToUpdate.save();
+// // // //     await userToUpdate.save();
 
-// //     res.status(StatusCodes.OK).json({
-// //       success: true,
-// //       msg: "User updated successfully",
-// //       user: {
-// //         id: userToUpdate._id,
-// //         fullname: userToUpdate.fullname,
-// //         email: userToUpdate.email,
-// //         role: userToUpdate.role,
-// //         phone: userToUpdate.phone,
-// //       },
-// //     });
-// //   } catch (err) {
-// //     console.error(err);
-// //     res
-// //       .status(StatusCodes.INTERNAL_SERVER_ERROR)
-// //       .json({ success: false, msg: err.message });
-// //   }
-// // };
+// // // //     res.status(StatusCodes.OK).json({
+// // // //       success: true,
+// // // //       msg: "User updated successfully",
+// // // //       user: {
+// // // //         id: userToUpdate._id,
+// // // //         fullname: userToUpdate.fullname,
+// // // //         email: userToUpdate.email,
+// // // //         role: userToUpdate.role,
+// // // //         phone: userToUpdate.phone,
+// // // //       },
+// // // //     });
+// // // //   } catch (err) {
+// // // //     console.error(err);
+// // // //     res
+// // // //       .status(StatusCodes.INTERNAL_SERVER_ERROR)
+// // // //       .json({ success: false, msg: err.message });
+// // // //   }
+// // // // };
 
-// // // ---------------------------
-// // // DELETE USER
-// // // ---------------------------
-// // const deleteUser = async (req, res) => {
-// //   try {
-// //     const { id } = req.params;
+// // // // // ---------------------------
+// // // // // DELETE USER
+// // // // // ---------------------------
+// // // // const deleteUser = async (req, res) => {
+// // // //   try {
+// // // //     const { id } = req.params;
 
-// //     if (req.user.role !== "admin") {
-// //       return res.status(StatusCodes.UNAUTHORIZED).json({
-// //         success: false,
-// //         msg: "Only admin can delete users",
-// //       });
-// //     }
+// // // //     if (req.user.role !== "admin") {
+// // // //       return res.status(StatusCodes.UNAUTHORIZED).json({
+// // // //         success: false,
+// // // //         msg: "Only admin can delete users",
+// // // //       });
+// // // //     }
 
-// //     const deletedUser = await User.findByIdAndDelete(id);
-// //     if (!deletedUser)
-// //       return res.status(StatusCodes.NOT_FOUND).json({
-// //         success: false,
-// //         msg: "User not found",
-// //       });
+// // // //     const deletedUser = await User.findByIdAndDelete(id);
+// // // //     if (!deletedUser)
+// // // //       return res.status(StatusCodes.NOT_FOUND).json({
+// // // //         success: false,
+// // // //         msg: "User not found",
+// // // //       });
 
-// //     res.status(StatusCodes.OK).json({ success: true, msg: "User deleted successfully" });
-// //   } catch (err) {
-// //     console.error(err);
-// //     res
-// //       .status(StatusCodes.INTERNAL_SERVER_ERROR)
-// //       .json({ success: false, msg: err.message });
-// //   }
-// // };
+// // // //     res.status(StatusCodes.OK).json({ success: true, msg: "User deleted successfully" });
+// // // //   } catch (err) {
+// // // //     console.error(err);
+// // // //     res
+// // // //       .status(StatusCodes.INTERNAL_SERVER_ERROR)
+// // // //       .json({ success: false, msg: err.message });
+// // // //   }
+// // // // };
 
-// // module.exports = { createUser, getUsers, updateUser, deleteUser };
+// // // // module.exports = { createUser, getUsers, updateUser, deleteUser };
+// // // const User = require("../models/User");
+// // // const { StatusCodes } = require("http-status-codes");
+// // // const { BadRequestError, UnauthorizedError, NotFoundError } = require("../errors");
+
+// // // // ---------------------------
+// // // // CREATE USER
+// // // // ---------------------------
+// // // const createUser = async (req, res) => {
+// // //   try {
+// // //     const { fullname, email, password, role } = req.body;
+// // //     if (!fullname || !email || !password || !role)
+// // //       throw new BadRequestError("Provide all required fields");
+
+// // //     const creatorRole = req.user.role;
+
+// // //     const allowedRolesByCreator = {
+// // //       admin: ["admin", "manager", "agent", "broker"],
+// // //       manager: ["agent", "broker"],
+// // //     };
+
+// // //     if (!allowedRolesByCreator[creatorRole]?.includes(role)) {
+// // //       return res.status(StatusCodes.FORBIDDEN).json({
+// // //         success: false,
+// // //         msg: `You (${creatorRole}) cannot create a user with role ${role}`,
+// // //       });
+// // //     }
+
+// // //     const existingUser = await User.findOne({ email });
+// // //     if (existingUser)
+// // //       return res
+// // //         .status(StatusCodes.BAD_REQUEST)
+// // //         .json({ success: false, msg: "Email already registered" });
+
+// // //     const user = await User.create({
+// // //       fullname,
+// // //       email,
+// // //       password,
+// // //       role,
+// // //       createdBy: req.user.userId,
+// // //     });
+
+// // //     res.status(StatusCodes.CREATED).json({
+// // //       success: true,
+// // //       msg: "User created successfully",
+// // //       user: {
+// // //         id: user._id,
+// // //         fullname: user.fullname,
+// // //         email: user.email,
+// // //         role: user.role,
+// // //       },
+// // //     });
+// // //   } catch (error) {
+// // //     console.error(error);
+// // //     res
+// // //       .status(StatusCodes.INTERNAL_SERVER_ERROR)
+// // //       .json({ success: false, msg: error.message });
+// // //   }
+// // // };
+
+// // // // ---------------------------
+// // // // GET USERS (Updated for Manager & Admin)
+// // // // ---------------------------
+// // // const getUsers = async (req, res) => {
+// // //   try {
+// // //     const { role } = req.query; // optional query param to filter by role
+// // //     let filter = {};
+
+// // //     // Filter by role if provided
+// // //     if (role && role !== "all") {
+// // //       filter.role = role;
+// // //     }
+
+// // //     // Admin -> no additional filter
+// // //     // Manager -> only agents/brokers (created by admin OR manager) 
+// // //     if (req.user.role === "manager") {
+// // //       filter.role = filter.role || { $in: ["agent", "broker"] };
+// // //     }
+
+// // //     const users = await User.find(filter)
+// // //       .select("-password")
+// // //       .populate("createdBy", "fullname role")
+// // //       .sort({ createdAt: -1 });
+
+// // //     res.status(StatusCodes.OK).json({ success: true, users });
+// // //   } catch (err) {
+// // //     console.error(err);
+// // //     res
+// // //       .status(StatusCodes.INTERNAL_SERVER_ERROR)
+// // //       .json({ success: false, msg: err.message });
+// // //   }
+// // // };
+
+// // // // ---------------------------
+// // // // UPDATE USER
+// // // // ---------------------------
+// // // const updateUser = async (req, res) => {
+// // //   try {
+// // //     const { id } = req.params;
+// // //     const { fullname, email, role, phone } = req.body;
+
+// // //     const userToUpdate = await User.findById(id);
+// // //     if (!userToUpdate) throw new NotFoundError("User not found");
+
+// // //     // Only admin can change roles
+// // //     if (role && req.user.role !== "admin") {
+// // //       return res.status(StatusCodes.FORBIDDEN).json({
+// // //         success: false,
+// // //         msg: "Only admin can change roles",
+// // //       });
+// // //     }
+
+// // //     userToUpdate.fullname = fullname || userToUpdate.fullname;
+// // //     userToUpdate.email = email || userToUpdate.email;
+// // //     userToUpdate.phone = phone || userToUpdate.phone;
+// // //     if (role) userToUpdate.role = role;
+
+// // //     await userToUpdate.save();
+
+// // //     res.status(StatusCodes.OK).json({
+// // //       success: true,
+// // //       msg: "User updated successfully",
+// // //       user: {
+// // //         id: userToUpdate._id,
+// // //         fullname: userToUpdate.fullname,
+// // //         email: userToUpdate.email,
+// // //         role: userToUpdate.role,
+// // //         phone: userToUpdate.phone,
+// // //       },
+// // //     });
+// // //   } catch (err) {
+// // //     console.error(err);
+// // //     res
+// // //       .status(StatusCodes.INTERNAL_SERVER_ERROR)
+// // //       .json({ success: false, msg: err.message });
+// // //   }
+// // // };
+
+// // // // ---------------------------
+// // // // DELETE USER
+// // // // ---------------------------
+// // // const deleteUser = async (req, res) => {
+// // //   try {
+// // //     const { id } = req.params;
+
+// // //     if (req.user.role !== "admin") {
+// // //       return res.status(StatusCodes.UNAUTHORIZED).json({
+// // //         success: false,
+// // //         msg: "Only admin can delete users",
+// // //       });
+// // //     }
+
+// // //     const deletedUser = await User.findByIdAndDelete(id);
+// // //     if (!deletedUser)
+// // //       return res.status(StatusCodes.NOT_FOUND).json({
+// // //         success: false,
+// // //         msg: "User not found",
+// // //       });
+
+// // //     res.status(StatusCodes.OK).json({ success: true, msg: "User deleted successfully" });
+// // //   } catch (err) {
+// // //     console.error(err);
+// // //     res
+// // //       .status(StatusCodes.INTERNAL_SERVER_ERROR)
+// // //       .json({ success: false, msg: err.message });
+// // //   }
+// // // };
+
+// // // module.exports = { createUser, getUsers, updateUser, deleteUser };
+
 // const User = require("../models/User");
 // const { StatusCodes } = require("http-status-codes");
-// const { BadRequestError, UnauthorizedError, NotFoundError } = require("../errors");
+// const { BadRequestError, NotFoundError } = require("../errors");
 
 // // ---------------------------
 // // CREATE USER
@@ -176,28 +345,31 @@
 // const createUser = async (req, res) => {
 //   try {
 //     const { fullname, email, password, role } = req.body;
-//     if (!fullname || !email || !password || !role)
+//     if (!fullname || !email || !password || !role) {
 //       throw new BadRequestError("Provide all required fields");
+//     }
 
 //     const creatorRole = req.user.role;
 
+//     //  Updated roles
 //     const allowedRolesByCreator = {
-//       admin: ["admin", "manager", "agent", "broker"],
-//       manager: ["agent", "broker"],
+//       admin: ["admin", "manager", "broker", "assistant"],
+//       manager: ["broker", "assistant"], // manager cannot create another manager/admin
 //     };
 
 //     if (!allowedRolesByCreator[creatorRole]?.includes(role)) {
 //       return res.status(StatusCodes.FORBIDDEN).json({
 //         success: false,
-//         msg: `You (${creatorRole}) cannot create a user with role ${role}`,
+//         msg: `You (${creatorRole}) cannot create a user with role "${role}"`,
 //       });
 //     }
 
 //     const existingUser = await User.findOne({ email });
-//     if (existingUser)
+//     if (existingUser) {
 //       return res
 //         .status(StatusCodes.BAD_REQUEST)
 //         .json({ success: false, msg: "Email already registered" });
+//     }
 
 //     const user = await User.create({
 //       fullname,
@@ -219,29 +391,38 @@
 //     });
 //   } catch (error) {
 //     console.error(error);
-//     res
-//       .status(StatusCodes.INTERNAL_SERVER_ERROR)
-//       .json({ success: false, msg: error.message });
+//     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+//       success: false,
+//       msg: error.message,
+//     });
 //   }
 // };
 
 // // ---------------------------
-// // GET USERS (Updated for Manager & Admin)
+// // GET USERS (Admin + Manager)
 // // ---------------------------
 // const getUsers = async (req, res) => {
 //   try {
-//     const { role } = req.query; // optional query param to filter by role
+//     const { role } = req.query;
 //     let filter = {};
 
-//     // Filter by role if provided
-//     if (role && role !== "all") {
-//       filter.role = role;
-//     }
+//     const userRole = req.user.role;
 
-//     // Admin -> no additional filter
-//     // Manager -> only agents/brokers (created by admin OR manager) 
-//     if (req.user.role === "manager") {
-//       filter.role = filter.role || { $in: ["agent", "broker"] };
+//     // Manager → only brokers/assistent
+//     if (userRole === "manager") {
+//       filter.role = { $in: ["broker", "assistant"] };
+
+//       if (role && !["broker", "assistant", "all"].includes(role)) {
+//         return res.status(StatusCodes.FORBIDDEN).json({
+//           success: false,
+//           msg: "Managers can only view brokers & assistents.",
+//         });
+//       }
+
+//       if (role && role !== "all") filter.role = role;
+//     } else {
+//       // Admin
+//       if (role && role !== "all") filter.role = role;
 //     }
 
 //     const users = await User.find(filter)
@@ -250,11 +431,12 @@
 //       .sort({ createdAt: -1 });
 
 //     res.status(StatusCodes.OK).json({ success: true, users });
-//   } catch (err) {
-//     console.error(err);
-//     res
-//       .status(StatusCodes.INTERNAL_SERVER_ERROR)
-//       .json({ success: false, msg: err.message });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+//       success: false,
+//       msg: error.message,
+//     });
 //   }
 // };
 
@@ -277,9 +459,9 @@
 //       });
 //     }
 
-//     userToUpdate.fullname = fullname || userToUpdate.fullname;
-//     userToUpdate.email = email || userToUpdate.email;
-//     userToUpdate.phone = phone || userToUpdate.phone;
+//     if (fullname) userToUpdate.fullname = fullname;
+//     if (email) userToUpdate.email = email;
+//     if (phone) userToUpdate.phone = phone;
 //     if (role) userToUpdate.role = role;
 
 //     await userToUpdate.save();
@@ -297,9 +479,10 @@
 //     });
 //   } catch (err) {
 //     console.error(err);
-//     res
-//       .status(StatusCodes.INTERNAL_SERVER_ERROR)
-//       .json({ success: false, msg: err.message });
+//     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+//       success: false,
+//       msg: err.message,
+//     });
 //   }
 // };
 
@@ -327,9 +510,10 @@
 //     res.status(StatusCodes.OK).json({ success: true, msg: "User deleted successfully" });
 //   } catch (err) {
 //     console.error(err);
-//     res
-//       .status(StatusCodes.INTERNAL_SERVER_ERROR)
-//       .json({ success: false, msg: err.message });
+//     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+//       success: false,
+//       msg: err.message,
+//     });
 //   }
 // };
 
@@ -343,17 +527,16 @@ const { BadRequestError, NotFoundError } = require("../errors");
 // ---------------------------
 const createUser = async (req, res) => {
   try {
-    const { fullname, email, password, role } = req.body;
+    const { fullname, email, password, role, phone } = req.body;
     if (!fullname || !email || !password || !role) {
       throw new BadRequestError("Provide all required fields");
     }
 
     const creatorRole = req.user.role;
 
-    // Admin can create anyone; Manager can only create agent or broker
     const allowedRolesByCreator = {
-      admin: ["admin", "manager", "agent", "broker"],
-      manager: ["agent", "broker"],
+      admin: ["admin", "manager", "broker", "assistant"],
+      manager: ["broker", "assistant"],
     };
 
     if (!allowedRolesByCreator[creatorRole]?.includes(role)) {
@@ -375,6 +558,7 @@ const createUser = async (req, res) => {
       email,
       password,
       role,
+      phone,
       createdBy: req.user.userId,
     });
 
@@ -386,6 +570,7 @@ const createUser = async (req, res) => {
         fullname: user.fullname,
         email: user.email,
         role: user.role,
+        phone: user.phone,
       },
     });
   } catch (error) {
@@ -398,20 +583,24 @@ const createUser = async (req, res) => {
 };
 
 // ---------------------------
-// GET USERS (Admin + Manager)
+// GET USERS
 // ---------------------------
 const getUsers = async (req, res) => {
   try {
-    const { role } = req.query; // optional filter
+    const { role } = req.query;
     let filter = {};
+    const userRole = req.user.role;
 
-    // Manager should only see agents & brokers
-    if (req.user.role === "manager") {
-      filter.role = { $in: ["agent", "broker"] };
-    }
-
-    // Role filter applied if query param exists
-    if (role && role !== "all") {
+    if (userRole === "manager") {
+      filter.role = { $in: ["broker", "assistant"] };
+      if (role && !["broker", "assistant", "all"].includes(role)) {
+        return res.status(StatusCodes.FORBIDDEN).json({
+          success: false,
+          msg: "Managers can only view brokers & assistants.",
+        });
+      }
+      if (role && role !== "all") filter.role = role;
+    } else if (role && role !== "all") {
       filter.role = role;
     }
 
@@ -441,7 +630,6 @@ const updateUser = async (req, res) => {
     const userToUpdate = await User.findById(id);
     if (!userToUpdate) throw new NotFoundError("User not found");
 
-    // Only admin can change roles
     if (role && req.user.role !== "admin") {
       return res.status(StatusCodes.FORBIDDEN).json({
         success: false,
@@ -449,9 +637,9 @@ const updateUser = async (req, res) => {
       });
     }
 
-    userToUpdate.fullname = fullname || userToUpdate.fullname;
-    userToUpdate.email = email || userToUpdate.email;
-    userToUpdate.phone = phone || userToUpdate.phone;
+    if (fullname) userToUpdate.fullname = fullname;
+    if (email) userToUpdate.email = email;
+    if (phone) userToUpdate.phone = phone;
     if (role) userToUpdate.role = role;
 
     await userToUpdate.save();
@@ -482,8 +670,6 @@ const updateUser = async (req, res) => {
 const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
-
-    // Only admin can delete users
     if (req.user.role !== "admin") {
       return res.status(StatusCodes.UNAUTHORIZED).json({
         success: false,

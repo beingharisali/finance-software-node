@@ -2,12 +2,27 @@
 const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/authentication");
-const allowRoles = require("../middleware/roleMiddleware"); // <- ye missing tha
+const allowRoles = require("../middleware/roleMiddleware"); 
 const { register, login, getProfile } = require("../controllers/auth");
 
-// Register → sirf Admin
+// ---------------------------
+// REGISTER → Only Admin
+// ---------------------------
 router.post("/register", auth, allowRoles("admin"), register);
+
+// ---------------------------
+// LOGIN → Anyone
+// ---------------------------
 router.post("/login", login);
-router.get("/profile", auth, getProfile,allowRoles("admin", "manager", "assistant", "broker"), getProfile);
+
+// ---------------------------
+// GET PROFILE → Authorized Roles
+// ---------------------------
+router.get(
+  "/profile",
+  auth,
+  allowRoles("admin", "manager","assistant", "broker"), 
+  getProfile
+);
 
 module.exports = router;
