@@ -26,8 +26,8 @@ const UserSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["admin", "manager", "agent", "broker"],
-      default: "agent",
+      enum: ["admin", "manager", "assistant", "broker"],
+      default: "assistant",
     },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, 
   },

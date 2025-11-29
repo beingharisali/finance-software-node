@@ -23,15 +23,15 @@ const allowRoles = require("../middleware/roleMiddleware");
 const { createSale, getSales, updateSale, deleteSale } = require("../controllers/saleController");
 
 // Create Sale → all roles can create
-router.post("/", auth, allowRoles("admin", "manager", "agent", "broker"), createSale);
+router.post("/", auth, allowRoles("admin", "manager", "assistant", "broker"), createSale);
 
 // Get Sales → admin/manager/all agents
-router.get("/", auth, allowRoles("admin", "manager", "agent", "broker"), getSales);
+router.get("/", auth, allowRoles("admin", "manager", "assistant", "broker"), getSales);
 
 // Update Sale → all roles (checks ownership inside controller)
-router.put("/:id", auth, allowRoles("admin", "manager", "agent", "broker"), updateSale);
+router.put("/:id", auth, allowRoles("admin", "manager", "assistant", "broker"), updateSale);
 
 // Delete Sale → all roles (checks ownership inside controller)
-router.delete("/:id", auth, allowRoles("admin", "manager", "agent", "broker"), deleteSale);
+router.delete("/:id", auth, allowRoles("admin", "manager", "assistant", "broker"), deleteSale);
 
 module.exports = router;
