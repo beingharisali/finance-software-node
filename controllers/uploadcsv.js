@@ -78,6 +78,39 @@ exports.uploadCSV = async (req, res) => {
         message: "No valid transactions found in the uploaded file.",
       });
     }
+// validationfor csv
+const toInsert = [];
+const duplicates = [];
+
+for (let record of formattedRecords) {
+  // Check if exact same transaction exists (same date + same other columns)
+  const exists = await Transaction.findOne({
+    transactionDate: record.transactionDate, // date bhi check
+    transactionDescription: record.transactionDescription.trim(),
+    amount: record.amount,
+    transactionType: record.transactionType.trim() || "Uncategorized"
+  });
+
+  if (!exists) {
+    toInsert.push(record);   // save only new transactions
+  } else {
+    duplicates.push(record); // keep track of duplicates
+  }
+}
+
+// Insert only new transactions
+if (toInsert.length > 0) {
+  await Transaction.insertMany(toInsert);
+}
+
+// Send proper response
+res.status(200).json({
+  message: duplicates.length > 0
+    ? `Some transactions already exist and were skipped`
+    : `All transactions uploaded successfully`,
+  totalSaved: toInsert.length,
+  duplicates: duplicates.length
+});
 
     // Insert all valid transactions into DB
     await Transaction.insertMany(formattedRecords);
