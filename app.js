@@ -25,6 +25,7 @@ app.use("/api/v1/upload-csv", uploadCsvRoute);
 app.use("/api/v1/transactions", transactionRoutes);
 app.use("/api/v1/sales", saleRoutes);
 
+
 app.use("/api/v1/categories", categoryRoutes);
 
 app.get("/", (req, res) => {
