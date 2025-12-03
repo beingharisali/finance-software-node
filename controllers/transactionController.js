@@ -132,25 +132,65 @@ exports.renameCategory = async (req, res) => {
   }
 };
 
-// ---------------------- UPDATE TRANSACTION'S CATEGORY ONLY ----------------------
+// // ---------------------- UPDATE TRANSACTION'S CATEGORY ONLY ----------------------
+// exports.updateTransactionCategory = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { category } = req.body;
+
+//     if (!category || category.trim() === "") {
+//       return res.status(400).json({ success: false, msg: "Category required" });
+//     }
+
+//     // Update ONLY the new category field
+//     const txn = await Transaction.findByIdAndUpdate(
+//       id,
+//       { category: category.trim() },
+//       { new: true }
+//     );
+
+//     if (!txn) {
+//       return res.status(404).json({ success: false, msg: "Transaction not found" });
+//     }
+
+//     res.status(200).json({
+//       success: true,
+//       msg: "Transaction category updated",
+//       transaction: txn,
+//     });
+//   } catch (error) {
+//     res.status(500).json({ success: false, msg: "Error updating transaction category" });
+//   }
+// };
+// ---------------------- UPDATE TRANSACTION'S CATEGORY ONLY OR FUTURE ----------------------
 exports.updateTransactionCategory = async (req, res) => {
   try {
     const { id } = req.params;
-    const { category } = req.body;
+    const { category, applyToFuture = false } = req.body; // add flag
 
     if (!category || category.trim() === "") {
       return res.status(400).json({ success: false, msg: "Category required" });
     }
 
-    // Update ONLY the new category field
+    const cleanCategory = category.trim();
+
+    // Update ONLY selected transaction
     const txn = await Transaction.findByIdAndUpdate(
       id,
-      { category: category.trim() },
+      { category: cleanCategory },
       { new: true }
     );
 
     if (!txn) {
       return res.status(404).json({ success: false, msg: "Transaction not found" });
+    }
+
+    // ------------------- APPLY TO ALL FUTURE TRANSACTIONS -------------------
+    if (applyToFuture) {
+      await Transaction.updateMany(
+        { transactionDescription: txn.transactionDescription, _id: { $ne: id } },
+        { category: cleanCategory }
+      );
     }
 
     res.status(200).json({
@@ -159,6 +199,7 @@ exports.updateTransactionCategory = async (req, res) => {
       transaction: txn,
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ success: false, msg: "Error updating transaction category" });
   }
 };
