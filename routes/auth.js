@@ -9,6 +9,7 @@ const { register, login, getProfile } = require("../controllers/auth");
 // REGISTER → Only Admin
 // ---------------------------
 router.post("/register", auth, allowRoles("admin"), register);
+// router.post("/register", register);  // No auth required for now
 
 // ---------------------------
 // LOGIN → Anyone
