@@ -62,29 +62,6 @@ exports.getSales = async (req, res) => {
   }
 };
 
-// exports.getSales = async (req, res) => {
-//   try {
-//     const { role, userId } = req.user;
-//     let sales;
-
-//     if (role === "broker") {
-//       // Broker → only own sales
-//       sales = await Sale.find({ broker: userId })
-//         .sort({ createdAt: -1 })
-//         .populate("broker", "fullname email role");
-//     } else {
-//       // Admin / Manager / Assistant → all broker sales
-//       sales = await Sale.find()
-//         .sort({ createdAt: -1 })
-//         .populate("broker", "fullname email role");
-//     }
-
-//     res.status(StatusCodes.OK).json({ success: true, sales });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: error.message });
-//   }
-// };
 
 // ---------------------------
 // UPDATE SALE

@@ -1,4 +1,4 @@
-// roleMiddleware.js
+
 const { ForbiddenError } = require("../errors");
 
 // allowedRoles = array of roles allowed for the route
