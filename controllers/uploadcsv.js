@@ -1,129 +1,105 @@
 
-
 const Transaction = require("../models/Transaction");
 const XLSX = require("xlsx");
 const moment = require("moment");
+const getValue = (row, keys) => {
+  for (let k of keys) {
+    if (row[k] !== undefined && row[k] !== null && row[k] !== "") return row[k];
+  }
+  return null;
+};
 
 exports.uploadCSV = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
     }
-
-    // Read Excel workbook
     const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
-    // Convert sheet to JSON and normalize headers
-    let rows = XLSX.utils.sheet_to_json(sheet, { defval: "" }).map((r) => {
-      const normalized = {};
-      Object.keys(r).forEach((k) => {
-        normalized[k.trim()] = r[k];
-      });
-      return normalized;
-    });
-
-    // Remove completely empty rows
-    rows = rows.filter((r) => Object.values(r).some((v) => v !== ""));
+    if (!rows.length) {
+      return res.status(400).json({ message: "No data found in the uploaded file." });
+    }
+    const columnMap = {
+      transactionDate: ["Transaction Date", "Date", "TransDate"],
+      transactionDescription: ["Description", "Name", "Notes and #tags", "Transaction Description", "Desc"],
+      transactionType: ["Type", "Category", "Category split", "Transaction Type", "Type"],
+      debitAmount: ["Money out", "Debit Amount", "Dr"],
+      creditAmount: ["Money In", "Credit Amount", "Cr"],
+      amount: ["Amount", "Local amount"],
+      currency: ["currency", "Local currency"],
+      sortCode: ["Sort Code", "Sort"],
+      accountNumber: ["Account Number", "AccNo"],
+      balance: ["Balance", "Bal"],
+      category: ["Category"]
+    };
 
     const formattedRecords = [];
-
-    rows.forEach((r, index) => {
-      let dateField = r["Transaction Date"];
-      let dateValue;
-
-      // Skip empty date
-      if (!dateField || dateField.toString().trim() === "") return;
-
-      // Handle Excel numeric dates
+    rows.forEach((r) => {
+      const record = {};
+      let dateField = getValue(r, columnMap.transactionDate);
       if (typeof dateField === "number") {
         const d = XLSX.SSF.parse_date_code(dateField);
-        if (!d) return;
-        dateValue = new Date(d.y, d.m - 1, d.d);
+        record.transactionDate = d ? new Date(d.y, d.m - 1, d.d) : new Date();
+      } else if (dateField) {
+        const m = moment(dateField, ["DD/MM/YYYY", "MM/DD/YYYY", "YYYY-MM-DD"], true);
+        record.transactionDate = m.isValid() ? m.toDate() : new Date();
       } else {
-        // Handle string dates in multiple formats
-        const m = moment(dateField, ["DD/MM/YYYY", "MM/DD/YYYY"], true);
-        if (!m.isValid()) return;
-        dateValue = m.toDate();
+        record.transactionDate = new Date();
       }
-
-      // Determine Amount (Debit = negative, Credit = positive)
-      let amount = null;
-      if (r["Debit Amount"] && r["Debit Amount"].toString().trim() !== "") {
-        amount = -Math.abs(Number(r["Debit Amount"]));
-      } else if (
-        r["Credit Amount"] &&
-        r["Credit Amount"].toString().trim() !== ""
-      ) {
-        amount = Math.abs(Number(r["Credit Amount"]));
-      } else {
-        return;
-      }
-
-      // Push all required columns
-      formattedRecords.push({
-        transactionDate: dateValue,
-        transactionDescription: r["Transaction Description"] || "",
-        transactionType: r["Transaction Type"] || "Uncategorized",
-        amount,
-        sortCode: r["Sort Code"] || "",
-        accountNumber: r["Account Number"] || "",
-        balance: r["Balance"] ? Number(r["Balance"]) : 0,
+      const debit = Number(getValue(r, columnMap.debitAmount)) || 0;
+      const credit = Number(getValue(r, columnMap.creditAmount)) || 0;
+      const amountField = Number(getValue(r, columnMap.amount)) || 0;
+      record.amount = credit - debit || amountField;
+      record.transactionDescription = getValue(r, columnMap.transactionDescription) || "No description";
+      record.transactionType = getValue(r, columnMap.transactionType) || "Uncategorized";
+      record.sortCode = getValue(r, columnMap.sortCode) || "";
+      record.accountNumber = getValue(r, columnMap.accountNumber) || "";
+      record.balance = Number(getValue(r, columnMap.balance)) || 0;
+      record.currency = getValue(r, columnMap.currency) || "";
+      record.category = getValue(r, columnMap.category) || "";
+      Object.keys(r).forEach((key) => {
+        if (!Object.values(columnMap).flat().includes(key)) {
+          record[key] = r[key];
+        }
       });
+
+      formattedRecords.push(record);
     });
 
-    if (formattedRecords.length === 0) {
-      return res.status(400).json({
-        message: "No valid transactions found in the uploaded file.",
-      });
+    if (!formattedRecords.length) {
+      return res.status(400).json({ message: "No valid transactions found in the uploaded file." });
     }
-// validationfor csv
-const toInsert = [];
-const duplicates = [];
 
-for (let record of formattedRecords) {
-  // Check if exact same transaction exists (same date + same other columns)
-  const exists = await Transaction.findOne({
-    transactionDate: record.transactionDate, // date bhi check
-    transactionDescription: record.transactionDescription.trim(),
-    amount: record.amount,
-    transactionType: record.transactionType.trim() || "Uncategorized"
-  });
+    const toInsert = [];
+    const duplicates = [];
 
-  if (!exists) {
-    toInsert.push(record);   // save only new transactions
-  } else {
-    duplicates.push(record); // keep track of duplicates
-  }
-}
+    for (const record of formattedRecords) {
+      const exists = await Transaction.findOne({
+        transactionDate: record.transactionDate,
+        transactionDescription: record.transactionDescription.trim(),
+        amount: record.amount,
+        transactionType: record.transactionType.trim() || "Uncategorized"
+      });
 
-// Insert only new transactions
-if (toInsert.length > 0) {
-  await Transaction.insertMany(toInsert);
-}
-
-// Send proper response
-res.status(200).json({
-  message: duplicates.length > 0
-    ? `Some transactions already exist and were skipped`
-    : `All transactions uploaded successfully`,
-  totalSaved: toInsert.length,
-  duplicates: duplicates.length
-});
-
-    // Insert all valid transactions into DB
-    await Transaction.insertMany(formattedRecords);
-
-    res.status(200).json({
-      message: "Excel uploaded and saved successfully!",
-      totalSaved: formattedRecords.length,
+      if (!exists) toInsert.push(record);
+      else duplicates.push(record);
+    }
+    if (toInsert.length > 0) {
+      await Transaction.insertMany(toInsert);
+    }
+    return res.status(200).json({
+      message: duplicates.length > 0
+        ? "Some transactions already exist and were skipped"
+        : "All transactions uploaded successfully",
+      totalSaved: toInsert.length,
+      duplicates: duplicates.length
     });
+
   } catch (error) {
     console.error(error);
-    res.status(500).json({
-      message: "Server error",
-      error: error.message,
-    });
+    return res.status(500).json({ message: "Server error", error: error.message });
   }
 };
