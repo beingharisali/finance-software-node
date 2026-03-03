@@ -2,6 +2,7 @@
 const Transaction = require("../models/Transaction");
 const XLSX = require("xlsx");
 const moment = require("moment");
+
 const getValue = (row, keys) => {
   for (let k of keys) {
     if (row[k] !== undefined && row[k] !== null && row[k] !== "") return row[k];
@@ -14,6 +15,7 @@ exports.uploadCSV = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
     }
+
     const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
@@ -22,10 +24,13 @@ exports.uploadCSV = async (req, res) => {
     if (!rows.length) {
       return res.status(400).json({ message: "No data found in the uploaded file." });
     }
+
+    // Column Mapping
     const columnMap = {
+      transactionId: ["Transaction ID", "TxnId", "Reference", "Ref No", "ID"],
       transactionDate: ["Transaction Date", "Date", "TransDate"],
       transactionDescription: ["Description", "Name", "Notes and #tags", "Transaction Description", "Desc"],
-      transactionType: ["Type", "Category", "Category split", "Transaction Type", "Type"],
+      transactionType: ["Type", "Category", "Category split", "Transaction Type"],
       debitAmount: ["Money out", "Debit Amount", "Dr"],
       creditAmount: ["Money In", "Credit Amount", "Cr"],
       amount: ["Amount", "Local amount"],
@@ -37,9 +42,18 @@ exports.uploadCSV = async (req, res) => {
     };
 
     const formattedRecords = [];
+
     rows.forEach((r) => {
       const record = {};
+
+      // duplicate check base on transaction id.  skip if no ID
+      record.transactionId = getValue(r, columnMap.transactionId);
+
+      if (!record.transactionId) return; 
+
+      //  Date Handling
       let dateField = getValue(r, columnMap.transactionDate);
+
       if (typeof dateField === "number") {
         const d = XLSX.SSF.parse_date_code(dateField);
         record.transactionDate = d ? new Date(d.y, d.m - 1, d.d) : new Date();
@@ -49,57 +63,74 @@ exports.uploadCSV = async (req, res) => {
       } else {
         record.transactionDate = new Date();
       }
+
       const debit = Number(getValue(r, columnMap.debitAmount)) || 0;
       const credit = Number(getValue(r, columnMap.creditAmount)) || 0;
       const amountField = Number(getValue(r, columnMap.amount)) || 0;
+
       record.amount = credit - debit || amountField;
-      record.transactionDescription = getValue(r, columnMap.transactionDescription) || "No description";
-      record.transactionType = getValue(r, columnMap.transactionType) || "Uncategorized";
+
+      record.transactionDescription =
+        getValue(r, columnMap.transactionDescription) || "No description";
+
+      record.transactionType =
+        getValue(r, columnMap.transactionType) || "Uncategorized";
+
       record.sortCode = getValue(r, columnMap.sortCode) || "";
       record.accountNumber = getValue(r, columnMap.accountNumber) || "";
       record.balance = Number(getValue(r, columnMap.balance)) || 0;
       record.currency = getValue(r, columnMap.currency) || "";
       record.category = getValue(r, columnMap.category) || "";
-      Object.keys(r).forEach((key) => {
-        if (!Object.values(columnMap).flat().includes(key)) {
-          record[key] = r[key];
-        }
-      });
 
       formattedRecords.push(record);
     });
 
     if (!formattedRecords.length) {
-      return res.status(400).json({ message: "No valid transactions found in the uploaded file." });
+      return res.status(400).json({
+        message: "No valid transactions found (Transaction ID missing in file)."
+      });
     }
+
+    // Dubplication check using transactionId
+    const transactionIds = formattedRecords.map(r => r.transactionId);
+
+    const existingTransactions = await Transaction.find({
+      transactionId: { $in: transactionIds }
+    }).select("transactionId");
+
+    const existingIdSet = new Set(
+      existingTransactions.map(t => t.transactionId)
+    );
 
     const toInsert = [];
     const duplicates = [];
 
-    for (const record of formattedRecords) {
-      const exists = await Transaction.findOne({
-        transactionDate: record.transactionDate,
-        transactionDescription: record.transactionDescription.trim(),
-        amount: record.amount,
-        transactionType: record.transactionType.trim() || "Uncategorized"
-      });
+    formattedRecords.forEach(record => {
+      if (!existingIdSet.has(record.transactionId)) {
+        toInsert.push(record);
+      } else {
+        duplicates.push(record);
+      }
+    });
 
-      if (!exists) toInsert.push(record);
-      else duplicates.push(record);
-    }
     if (toInsert.length > 0) {
       await Transaction.insertMany(toInsert);
     }
+
     return res.status(200).json({
-      message: duplicates.length > 0
-        ? "Some transactions already exist and were skipped"
-        : "All transactions uploaded successfully",
+      message:
+        duplicates.length > 0
+          ? "Some transactions already exist and were skipped"
+          : "All transactions uploaded successfully",
       totalSaved: toInsert.length,
       duplicates: duplicates.length
     });
 
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Server error", error: error.message });
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message
+    });
   }
 };
