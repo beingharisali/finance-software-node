@@ -9,9 +9,15 @@ exports.getTransactions = async (req, res) => {
     let filter = {};
 
     // Filter by category
+    // if (category && category.trim() !== "") {
+    //   filter.category = { $regex: category.trim(), $options: "i" };
+    // }
     if (category && category.trim() !== "") {
-      filter.category = { $regex: category.trim(), $options: "i" };
-    }
+  filter.$or = [
+    { category: { $regex: category.trim(), $options: "i" } },
+    { transactionType: { $regex: category.trim(), $options: "i" } },
+  ];
+}
 
     // Filter by date range
     if (startDate || endDate) {
