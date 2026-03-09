@@ -74,7 +74,7 @@ exports.uploadCSV = async (req, res) => {
         getValue(r, columnMap.transactionDescription) || "No description";
 
       record.transactionType =
-        getValue(r, columnMap.transactionType) || "Uncategorized";
+        getValue(r, columnMap.transactionType) || "Uncategorised";
 
       record.sortCode = getValue(r, columnMap.sortCode) || "";
       record.accountNumber = getValue(r, columnMap.accountNumber) || "";

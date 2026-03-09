@@ -84,7 +84,7 @@ const getUsers = async (req, res) => {
       }
       if (role && role !== "all") filter.role = role;
     } else if (userRole === "assistant") {
-      filter.role = "broker"; // Assistant can only see brokers
+      filter.role = "broker"; 
     } else if (role && role !== "all") {
       filter.role = role;
     }
