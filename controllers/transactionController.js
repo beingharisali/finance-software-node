@@ -9,9 +9,7 @@ exports.getTransactions = async (req, res) => {
     let filter = {};
 
     // Filter by category
-    // if (category && category.trim() !== "") {
-    //   filter.category = { $regex: category.trim(), $options: "i" };
-    // }
+   
     if (category && category.trim() !== "") {
   filter.$or = [
     { category: { $regex: category.trim(), $options: "i" } },
@@ -40,7 +38,7 @@ exports.getTransactions = async (req, res) => {
       category:
         txn.category && txn.category.trim() !== ""
           ? txn.category
-          : txn.transactionDescription || "Uncategorized",
+          : txn.transactionDescription || "Uncategorised",
     }));
 
     // ------------------- OPTIONAL: PERMANENTLY UPDATE DB -------------------
