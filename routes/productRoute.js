@@ -4,13 +4,9 @@ const router = express.Router();
 const multer = require("multer");
 const path = require("path");
 const productController = require("../controllers/productController");
-
+const { allocateBroker } = require("../controllers/productController");
 router.use(express.static(path.resolve(__dirname, "public")));
 
-// const storage = multer.diskStorage({
-//   destination: (req, file, cb) => cb(null, "./public/uploads"),
-//   filename: (req, file, cb) => cb(null, file.originalname),
-// });
 const storage = multer.memoryStorage();
 
 const uploads = multer({ storage });
@@ -24,5 +20,7 @@ router.post(
 );
 
 router.get("/all", productController.getProducts);
+// New PATCH route
+router.patch("/:id/allocate", allocateBroker);
 
 module.exports = router;

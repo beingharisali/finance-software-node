@@ -90,15 +90,29 @@ console.log("Raw Product Value:", rawProductValue, "Parsed:", parseExcelDate(raw
       .filter((p) => p.productId);
 
     // Remove duplicates based on productId
-    const existing = await Product.find({
-      productId: { $in: productData.map((p) => p.productId) },
-    }).select("productId");
+    // const existing = await Product.find({
+    //   productId: { $in: productData.map((p) => p.productId) },
+    // }).select("productId");
 
-    const existingSet = new Set(existing.map((e) => e.productId));
-    const filteredData = productData.filter(
-      (p) => !existingSet.has(p.productId),
-    );
+    // const existingSet = new Set(existing.map((e) => e.productId));
+    // const filteredData = productData.filter(
+    //   (p) => !existingSet.has(p.productId),
+    // );
+// Remove duplicates based on productId + caskNo
+const existing = await Product.find({
+  $or: productData.map((p) => ({
+    productId: p.productId,
+    caskNo: p.caskNo,
+  })),
+}).select("productId caskNo");
 
+const existingSet = new Set(
+  existing.map((e) => `${e.productId}-${e.caskNo}`)
+);
+
+const filteredData = productData.filter(
+  (p) => !existingSet.has(`${p.productId}-${p.caskNo}`)
+);
     //Insert new products
     if (filteredData.length) {
       await Product.insertMany(filteredData);
@@ -128,8 +142,30 @@ const getProducts = async (req, res) => {
     res.status(500).json({ success: false, msg: error.message });
   }
 };
+// productController.js
 
+// Allocate broker to product
+const allocateBroker = async (req, res) => {
+  const { id } = req.params; // product id
+  const { brokerId } = req.body; // selected broker id
+
+  try {
+    const product = await Product.findByIdAndUpdate(
+      id,
+      { allocatedBroker: brokerId },
+      { new: true }
+    );
+
+    if (!product) return res.status(404).json({ msg: "Product not found" });
+
+    res.status(200).json({ success: true, data: product });
+  } catch (err) {
+    console.error("Allocate broker error:", err);
+    res.status(500).json({ success: false, msg: "Failed to allocate broker" });
+  }
+};
 module.exports = {
   importProduct,
   getProducts,
+   allocateBroker,
 };
