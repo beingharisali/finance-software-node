@@ -7,12 +7,15 @@ const productController = require("../controllers/productController");
 
 router.use(express.static(path.resolve(__dirname, "public")));
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "./public/uploads"),
-  filename: (req, file, cb) => cb(null, file.originalname),
-});
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => cb(null, "./public/uploads"),
+//   filename: (req, file, cb) => cb(null, file.originalname),
+// });
+const storage = multer.memoryStorage();
 
-const uploads = multer({ storage: storage });
+const uploads = multer({ storage });
+
+// const uploads = multer({ storage: storage });
 
 router.post(
   "/importProduct",

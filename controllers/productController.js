@@ -1,16 +1,23 @@
 const Product = require("../models/Product");
 const XLSX = require("xlsx");
-const path = require("path");
+// const path = require("path");
 
+// const getValue = (row, keys) => {
+//   for (let key of keys) {
+//     if (row[key] !== undefined && row[key] !== null) {
+//       return row[key]; 
+//     }
+//   }
+//   return null;
+// };
 const getValue = (row, keys) => {
   for (let key of keys) {
     if (row[key] !== undefined && row[key] !== null) {
-      return row[key]; 
+      return row[key];
     }
   }
   return null;
 };
-
 const parseExcelDate = (value) => {
   if (value == null) return null;
 
@@ -44,7 +51,8 @@ const importProduct = async (req, res) => {
     }
 
     //  Read Excel file
-    const workbook = XLSX.readFile(req.file.path);
+    // const workbook = XLSX.readFile(req.file.path);
+    const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
 
@@ -59,7 +67,7 @@ const importProduct = async (req, res) => {
     const productData = rows
       .map((row) => {
  
-        const rawProductValue = getValue(row, ["Product AYS", "Product AYS"]);
+        const rawProductValue = getValue(row, ["Product AYS", "product ays"]);
 console.log("Raw Product Value:", rawProductValue, "Parsed:", parseExcelDate(rawProductValue));
         return {
           productId: getValue(row, ["ID", "Id", "id"]),
