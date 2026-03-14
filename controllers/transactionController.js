@@ -28,7 +28,7 @@ exports.getTransactions = async (req, res) => {
 
     // Fetch transactions
     let transactions = await Transaction.find(filter)
-      .sort({ transactionDate: -1 })
+      .sort({ transactionDate: 1})
       .skip(skip)
       .limit(parseInt(limit));
 
