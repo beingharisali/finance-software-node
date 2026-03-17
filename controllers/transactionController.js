@@ -28,9 +28,12 @@ exports.getTransactions = async (req, res) => {
 
     // Fetch transactions
     let transactions = await Transaction.find(filter)
-      .sort({ transactionDate: 1})
-      .skip(skip)
-      .limit(parseInt(limit));
+  .sort({ transactionDate: -1 }); // descending order
+// .skip(skip).limit(parseInt(limit))  <- remove these lines for dashboard fetch
+    // let transactions = await Transaction.find(filter)
+    //   .sort({ transactionDate: 1})
+    //   .skip(skip)
+    //   .limit(parseInt(limit));
 
     // ------------------- SET DEFAULT CATEGORY IF EMPTY -------------------
     transactions = transactions.map(txn => ({
