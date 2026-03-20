@@ -14,7 +14,8 @@ const uploadCsvRoute = require("./routes/uploadcsv");
 const transactionRoutes = require("./routes/transactionRoutes");
 const categoryRoutes = require("./routes/category");
 const productRoute = require("./routes/productRoute");
-
+const clientRoutes = require("./routes/clientRoutes");
+const dealRoutes = require("./routes/dealRoute");
 
 
 app.use(cors());
@@ -25,8 +26,9 @@ app.use("/api/v1/upload-csv", uploadCsvRoute);
 app.use("/api/v1/transactions", transactionRoutes);
 app.use("/api/v1/sales", saleRoutes);
 app.use('/api/v1/productRoute', productRoute );
-
 app.use("/api/v1/categories", categoryRoutes);
+app.use("/api/v1/clients", clientRoutes);
+app.use("/api/v1/deals", dealRoutes);
 
 app.get("/", (req, res) => {
   res.status(StatusCodes.OK).json({
