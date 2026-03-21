@@ -11,7 +11,6 @@ const storage = multer.memoryStorage();
 
 const uploads = multer({ storage });
 
-// const uploads = multer({ storage: storage });
 
 router.post(
   "/importProduct",
