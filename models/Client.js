@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const clientSchema = new mongoose.Schema(
   {
     clientNumber: { type: Number, unique: true },
+     clientNo: { type: Number, required: true, unique: true }, 
     firstName: { type: String, required: true, trim: true },
     lastName: { type: String, required: true, trim: true },
     dateOfBirth: { type: Date, required: true },

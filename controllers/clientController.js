@@ -110,9 +110,50 @@ const createClient = async (req, res) => {
     res.status(500).json({ msg: err.message });
   }
 };
+// Update a client
+const updateClient = async (req, res) => {
+  try {
+    const clientNumber = Number(req.params.clientNumber); 
+
+    if (req.body.email) {
+      const existing = await Client.findOne({
+        email: req.body.email.toLowerCase(),
+        clientNumber: { $ne: clientNumber }
+      });
+      if (existing) return res.status(400).json({ msg: "Email already exists" });
+    }
+
+    const updatedClient = await Client.findOneAndUpdate(
+      { clientNumber },
+      req.body,
+      { new: true }
+    );
+
+    if (!updatedClient) return res.status(404).json({ msg: "Client not found" });
+
+    res.json(updatedClient);
+  } catch (err) {
+    res.status(500).json({ msg: err.message });
+  }
+};
+// Delete a client
+const deleteClient = async (req, res) => {
+  try {
+    const clientNumber = req.params.clientNumber;
+    const deletedClient = await Client.findOneAndDelete({ clientNumber });
+
+    if (!deletedClient) return res.status(404).json({ msg: "Client not found" });
+
+    res.json({ msg: "Client deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ msg: err.message });
+  }
+};
 
 module.exports = {
   importClients,
   createClient,
   getClients,
+  updateClient,  
+  deleteClient, 
 };
