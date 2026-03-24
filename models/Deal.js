@@ -7,8 +7,14 @@ const dealSchema = new mongoose.Schema(
     date: { type: Date, required: true, default: Date.now }, // <-- CHANGE here
     broker: { type: String, required: true },
     client: { type: String, required: true },
-    products: [{ type: String, required: true }],
-    // status: { type: String, default: "Pending" },
+    // products: [{ type: String, required: true }],
+    products: [
+  {
+    productId: { type: String, required: true },
+    price: { type: Number, required: true }
+  }
+],
+
     status: { type: String, default: "document sent" },
   },
   { timestamps: true }
