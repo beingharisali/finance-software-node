@@ -15,7 +15,9 @@ const productSchema = new mongoose.Schema(
     costPrice: Number,
     supplierPrice: Number,
     finalPrice: Number,
+    status: { type: String, default: "Available" },
     allocatedBroker: { type: String, default: "" },
+    statusDate: { type: Date, default: null }
   },
   { timestamps: true }
 );

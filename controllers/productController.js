@@ -142,7 +142,30 @@ const getProducts = async (req, res) => {
     res.status(500).json({ success: false, msg: error.message });
   }
 };
-// productController.js
+// status
+
+// Update status
+const updateStatus = async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  try {
+    const product = await Product.findByIdAndUpdate(
+      id,
+      // { status },
+      { status, statusDate: new Date() },
+      { new: true }
+    );
+    
+
+    if (!product) return res.status(404).json({ msg: "Product not found" });
+
+    res.status(200).json({ success: true, data: product });
+  } catch (err) {
+    console.error("Update status error:", err);
+    res.status(500).json({ success: false, msg: "Failed to update status" });
+  }
+};
 
 // Allocate broker to product
 const allocateBroker = async (req, res) => {
@@ -150,13 +173,25 @@ const allocateBroker = async (req, res) => {
   const { brokerId } = req.body; // selected broker id
 
   try {
-    const product = await Product.findByIdAndUpdate(
-      id,
-      { allocatedBroker: brokerId },
-      { new: true }
-    );
-
+    // Step 1: find product by id
+    const product = await Product.findById(id);
     if (!product) return res.status(404).json({ msg: "Product not found" });
+
+    // Step 2: update allocatedBroker
+    product.allocatedBroker = brokerId || "";
+
+
+    product.status = brokerId ? "On Hold" : "Available";
+   
+  if (brokerId) {    product.status = "On Hold";
+    product.statusDate = new Date();
+   } else {
+    product.status = "Available";
+     product.statusDate = null;
+   }
+
+    // Step 4: save product
+    await product.save();
 
     res.status(200).json({ success: true, data: product });
   } catch (err) {
@@ -164,8 +199,28 @@ const allocateBroker = async (req, res) => {
     res.status(500).json({ success: false, msg: "Failed to allocate broker" });
   }
 };
+// const allocateBroker = async (req, res) => {
+//   const { id } = req.params; // product id
+//   const { brokerId } = req.body; // selected broker id
+
+//   try {
+//     const product = await Product.findByIdAndUpdate(
+//       id,
+//       { allocatedBroker: brokerId },
+//       { new: true }
+//     );
+
+//     if (!product) return res.status(404).json({ msg: "Product not found" });
+
+//     res.status(200).json({ success: true, data: product });
+//   } catch (err) {
+//     console.error("Allocate broker error:", err);
+//     res.status(500).json({ success: false, msg: "Failed to allocate broker" });
+//   }
+// };
 module.exports = {
   importProduct,
   getProducts,
    allocateBroker,
+   updateStatus,
 };

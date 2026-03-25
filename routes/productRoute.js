@@ -21,5 +21,7 @@ router.post(
 router.get("/all", productController.getProducts);
 // New PATCH route
 router.patch("/:id/allocate", allocateBroker);
+// status
+router.patch("/:id/status", productController.updateStatus);
 
 module.exports = router;
