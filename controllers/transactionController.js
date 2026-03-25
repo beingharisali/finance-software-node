@@ -5,16 +5,62 @@ const Transaction = require("../models/Transaction");
 // ---------------------- GET TRANSACTIONS ----------------------
 exports.getTransactions = async (req, res) => {
   try {
-    const { category, startDate, endDate, page = 1, limit = 20 } = req.query;
+    // const { category, startDate, endDate, page = 1, limit = 20 } = req.query;
+    const { category, startDate, endDate, page = 1, limit = 20, search } = req.query;
     let filter = {};
-
+const escapeRegex = (text) => {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+};
     // Filter by category
    
-    if (category && category.trim() !== "") {
-  filter.$or = [
-    { category: { $regex: category.trim(), $options: "i" } },
-    { transactionType: { $regex: category.trim(), $options: "i" } },
-  ];
+//     if (category && category.trim() !== "") {
+//   // filter.$or = [
+//   //   { category: { $regex: category.trim(), $options: "i" } },
+//   //   { transactionType: { $regex: category.trim(), $options: "i" } },
+//   // ];
+//   filter.$or = [
+//   { category: { $regex: category.trim(), $options: "i" } },
+//   { transactionDescription: { $regex: category.trim(), $options: "i" } },
+// ];
+// }
+// if (search && search.trim() !== "") {
+//   const words = search.trim().split(/\s+/); // split by space
+
+//   filter.$and = words.map((word) => ({
+//     transactionDescription: {
+//       $regex: escapeRegex(word),
+//       $options: "i",
+//     },
+//   }));
+// }
+let conditions = [];
+
+// ✅ CATEGORY FILTER
+if (category && category.trim() !== "") {
+  conditions.push({
+    $or: [
+      { category: { $regex: category.trim(), $options: "i" } },
+      { transactionDescription: { $regex: category.trim(), $options: "i" } },
+    ],
+  });
+}
+
+// ✅ SEARCH FILTER (SMART WORD SEARCH)
+if (search && search.trim() !== "") {
+  const words = search.trim().split(/\s+/);
+
+  words.forEach((word) => {
+    conditions.push({
+      transactionDescription: {
+        $regex: escapeRegex(word),
+        $options: "i",
+      },
+    });
+  });
+}
+
+if (conditions.length > 0) {
+  filter = { $and: conditions };
 }
 
     // Filter by date range
@@ -25,16 +71,13 @@ exports.getTransactions = async (req, res) => {
     }
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
-
+console.log("SEARCH VALUE:", search);
+console.log("FILTER:", filter);
     // Fetch transactions
     let transactions = await Transaction.find(filter)
   .sort({ transactionDate: -1 }); // descending order
-// .skip(skip).limit(parseInt(limit))  <- remove these lines for dashboard fetch
-    // let transactions = await Transaction.find(filter)
-    //   .sort({ transactionDate: 1})
-    //   .skip(skip)
-    //   .limit(parseInt(limit));
 
+console.log("FIRST TRANSACTION DESC:", transactions[0]?.transactionDescription);
     // ------------------- SET DEFAULT CATEGORY IF EMPTY -------------------
     transactions = transactions.map(txn => ({
       ...txn._doc,
