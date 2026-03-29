@@ -16,7 +16,10 @@ const dealSchema = new mongoose.Schema(
 ],
 
     status: { type: String, default: "document sent" },
+    commission: { type: Number, default: 0 },
+    
   },
+  
   { timestamps: true }
 );
 

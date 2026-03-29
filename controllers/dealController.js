@@ -16,7 +16,7 @@ exports.getDeals = async (req, res) => {
 
 //  Create a new deal
 exports.createDeal = async (req, res) => {
-  const { broker, client, products, status } = req.body;
+  const { broker, client, products, status, commission } = req.body;
 
   if (!broker || !client || !Array.isArray(products) || products.length === 0) {
     return res.status(400).json({ message: "Broker, client, and at least one product are required" });
@@ -35,6 +35,7 @@ exports.createDeal = async (req, res) => {
       client,
       products,
       status: status || "document sent",
+      commission: commission || 0,
     });
 
     const savedDeal = await newDeal.save();
@@ -47,7 +48,8 @@ exports.createDeal = async (req, res) => {
 
 // Update deal (FULL + STATUS SUPPORT)
 exports.updateDeal = async (req, res) => {
-  const { broker, client, products, status } = req.body;
+  // const { broker, client, products, status } = req.body;
+  const { broker, client, products, status, commission } = req.body;
 
   // ID validation
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
@@ -70,6 +72,9 @@ exports.updateDeal = async (req, res) => {
   }
 
   if (status) updateData.status = status;
+  if (commission !== undefined) {
+    updateData.commission = commission;
+  }
 
   try {
     const updatedDeal = await Deal.findByIdAndUpdate(

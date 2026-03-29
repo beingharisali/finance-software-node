@@ -1,7 +1,8 @@
-
 const fs = require("fs");
 const csv = require("csv-parser");
 const Client = require("../models/Client");
+
+const Deal = require("../models/Deal");
 
 // Import CSV
 const importClients = async (req, res) => {
@@ -29,11 +30,23 @@ const importClients = async (req, res) => {
             const phoneNumber = row["Phone Number"]?.trim() || "";
             const address = row["Address"]?.trim() || "";
             const extraInfo = row["Extra Info"]?.trim() || "";
-            const dob = row["Date of Birth"] ? new Date(row["Date of Birth"]) : null;
+            const dob = row["Date of Birth"]
+              ? new Date(row["Date of Birth"])
+              : null;
 
             // Skip if required fields missing
-            if (!firstName || !lastName || !email || !phoneNumber || !address || !dob) {
-              console.error(`Skipped row ${index + 1}: missing required field`, row);
+            if (
+              !firstName ||
+              !lastName ||
+              !email ||
+              !phoneNumber ||
+              !address ||
+              !dob
+            ) {
+              console.error(
+                `Skipped row ${index + 1}: missing required field`,
+                row,
+              );
               skippedCount++;
               continue;
             }
@@ -47,7 +60,9 @@ const importClients = async (req, res) => {
             }
 
             // Auto-increment clientNumber
-            const lastClient = await Client.findOne().sort({ clientNumber: -1 });
+            const lastClient = await Client.findOne().sort({
+              clientNumber: -1,
+            });
             const clientNumber = lastClient ? lastClient.clientNumber + 1 : 1;
 
             const client = new Client({
@@ -64,7 +79,11 @@ const importClients = async (req, res) => {
             await client.save();
             addedCount++;
           } catch (rowErr) {
-            console.error(`Error saving row ${index + 1}:`, row, rowErr.message);
+            console.error(
+              `Error saving row ${index + 1}:`,
+              row,
+              rowErr.message,
+            );
             skippedCount++;
           }
         }
@@ -85,12 +104,38 @@ const importClients = async (req, res) => {
 };
 
 // Get all clients
+// const getClients = async (req, res) => {
+//   try {
+
+//     const clients = await Client.find().sort({ clientNumber: 1 });
+//     // Add deals count for each client
+//       const clientsWithDealsCount = await Promise.all(
+//         clients.map(async (client) => {
+//           const dealsCount = await Deal.countDocuments({ clientNumber: client.clientNumber });
+//           return { ...client.toObject(), dealsCount }; // Add dealsCount field
+//         })
+//       );
+//     res.json(clients);
+//   } catch (err) {
+//     res.status(500).json({ msg: err.message });
+//   }
+// };
 const getClients = async (req, res) => {
   try {
     const clients = await Client.find().sort({ clientNumber: 1 });
-    res.json(clients);
+
+    const clientsWithDealsCount = await Promise.all(
+      clients.map(async (client) => {
+
+        const dealsCount = await Deal.countDocuments({ client: client._id });
+        return { ...client.toObject(), dealsCount };
+      })
+    );
+
+    res.json(clientsWithDealsCount); // send clients with dealsCount
   } catch (err) {
-    res.status(500).json({ msg: err.message });
+    console.error(err);
+    res.status(500).json({ msg: "Server error" });
   }
 };
 
@@ -113,23 +158,25 @@ const createClient = async (req, res) => {
 // Update a client
 const updateClient = async (req, res) => {
   try {
-    const clientNumber = Number(req.params.clientNumber); 
+    const clientNumber = Number(req.params.clientNumber);
 
     if (req.body.email) {
       const existing = await Client.findOne({
         email: req.body.email.toLowerCase(),
-        clientNumber: { $ne: clientNumber }
+        clientNumber: { $ne: clientNumber },
       });
-      if (existing) return res.status(400).json({ msg: "Email already exists" });
+      if (existing)
+        return res.status(400).json({ msg: "Email already exists" });
     }
 
     const updatedClient = await Client.findOneAndUpdate(
       { clientNumber },
       req.body,
-      { new: true }
+      { new: true },
     );
 
-    if (!updatedClient) return res.status(404).json({ msg: "Client not found" });
+    if (!updatedClient)
+      return res.status(404).json({ msg: "Client not found" });
 
     res.json(updatedClient);
   } catch (err) {
@@ -142,7 +189,8 @@ const deleteClient = async (req, res) => {
     const clientNumber = req.params.clientNumber;
     const deletedClient = await Client.findOneAndDelete({ clientNumber });
 
-    if (!deletedClient) return res.status(404).json({ msg: "Client not found" });
+    if (!deletedClient)
+      return res.status(404).json({ msg: "Client not found" });
 
     res.json({ msg: "Client deleted successfully" });
   } catch (err) {
@@ -150,10 +198,30 @@ const deleteClient = async (req, res) => {
   }
 };
 
+// Get deals for a single client
+const getClientDeals = async (req, res) => {
+  try {
+    const clientId = req.params.id;
+    const deals = await Deal.find({ client: clientId }).sort({ createdAt: -1 });
+    res.json(deals);
+  } catch (err) {
+    res.status(500).json({ msg: "Server error", error: err.message });
+  }
+};
+
+// module.exports = {
+//   importClients,
+//   createClient,
+//   getClients,
+//   updateClient,
+//   deleteClient,
+
+// };
 module.exports = {
   importClients,
   createClient,
   getClients,
-  updateClient,  
-  deleteClient, 
+  updateClient,
+  deleteClient,
+  getClientDeals,
 };
