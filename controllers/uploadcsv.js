@@ -41,6 +41,7 @@ exports.uploadCSV = async (req, res) => {
         "Name",
         "Notes and #tags",
         "Transaction Description",
+        "Transaction description",
         "Desc",
       ],
       transactionType: [
@@ -48,6 +49,7 @@ exports.uploadCSV = async (req, res) => {
         "Category",
         "Category split",
         "Transaction Type",
+        "Transaction type",
       ],
       debitAmount: ["Money out", "Debit Amount", "Dr"],
       creditAmount: ["Money In", "Credit Amount", "Cr"],
@@ -56,7 +58,7 @@ exports.uploadCSV = async (req, res) => {
       sortCode: ["Sort Code", "Sort"],
       accountNumber: ["Account Number", "AccNo"],
       balance: ["Balance", "Bal"],
-      category: ["Category"],
+      category: ["Category","Category name"],
       time: ["Time"], // optional if CSV has Time column
     };
 
