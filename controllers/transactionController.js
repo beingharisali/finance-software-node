@@ -45,7 +45,7 @@ if (category && category.trim() !== "") {
   });
 }
 
-// ✅ SEARCH FILTER (SMART WORD SEARCH)
+//  SEARCH FILTER (SMART WORD SEARCH)
 if (search && search.trim() !== "") {
   const words = search.trim().split(/\s+/);
 

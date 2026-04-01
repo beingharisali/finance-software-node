@@ -53,7 +53,7 @@ exports.uploadCSV = async (req, res) => {
       ],
       debitAmount: ["Money out", "Debit Amount", "Dr"],
       creditAmount: ["Money In", "Credit Amount", "Cr"],
-      amount: ["Amount", "Local amount"],
+      amount: ["Amount", "Local amount", "Paid out", "Paid in"],
       currency: ["currency", "Local currency"],
       sortCode: ["Sort Code", "Sort"],
       accountNumber: ["Account Number", "AccNo"],
