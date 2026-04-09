@@ -2,14 +2,7 @@ const Product = require("../models/Product");
 const XLSX = require("xlsx");
 // const path = require("path");
 
-// const getValue = (row, keys) => {
-//   for (let key of keys) {
-//     if (row[key] !== undefined && row[key] !== null) {
-//       return row[key]; 
-//     }
-//   }
-//   return null;
-// };
+
 const getValue = (row, keys) => {
   for (let key of keys) {
     if (row[key] !== undefined && row[key] !== null) {
