@@ -102,10 +102,33 @@ exports.uploadCSV = async (req, res) => {
       }
 
       // --------------- Amounts ---------------
-      const debit = Number(getValue(r, columnMap.debitAmount)) || 0;
-      const credit = Number(getValue(r, columnMap.creditAmount)) || 0;
-      const amountField = Number(getValue(r, columnMap.amount)) || 0;
-      record.amount = credit - debit || amountField;
+      
+      // --------------- Amounts ---------------
+
+//Paid In / Paid Out support
+const paidIn = Number(getValue(r, ["Paid in", "Paid In"])) || 0;
+const paidOut = Number(getValue(r, ["Paid out", "Paid Out"])) || 0;
+
+// existing fields
+const debit = Number(getValue(r, columnMap.debitAmount)) || 0;
+const credit = Number(getValue(r, columnMap.creditAmount)) || 0;
+const amountField = Number(getValue(r, columnMap.amount)) || 0;
+
+
+if (paidIn || paidOut) {
+ 
+  record.amount = paidIn - paidOut;
+} else if (credit || debit) {
+
+  record.amount = credit - debit;
+} else {
+
+  record.amount = amountField;
+}
+      // const debit = Number(getValue(r, columnMap.debitAmount)) || 0;
+      // const credit = Number(getValue(r, columnMap.creditAmount)) || 0;
+      // const amountField = Number(getValue(r, columnMap.amount)) || 0;
+      // record.amount = credit - debit || amountField;
 
       // --------------- Other Fields ---------------
       record.transactionDescription =
