@@ -63,7 +63,7 @@ res.status(201).json(savedDeal);
   }
 };
 
-// Update deal (FULL + STATUS SUPPORT)
+// Update deals
 exports.updateDeal = async (req, res) => {
   // const { broker, client, products, status } = req.body;
   const { broker, client, products, status, commission } = req.body;
@@ -128,19 +128,7 @@ if (status || products) {
     }
   );
 }
-// if (products) {
-//   const productIds = products.map(p => p.productId);
 
-//   await Product.updateMany(
-//     { _id: { $in: productIds } },
-//     { 
-//       $set: { 
-//         status: "On Hold",
-//         statusDate: new Date()
-//       } 
-//     }
-//   );
-// }
     res.json(updatedDeal);
 
   } catch (err) {
@@ -185,22 +173,3 @@ exports.deleteDeal = async (req, res) => {
     res.status(500).json({ message: "Failed to delete deal", error: err.message });
   }
 };
-// exports.deleteDeal = async (req, res) => {
-//   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-//     return res.status(400).json({ message: "Invalid deal ID" });
-//   }
-
-//   try {
-//     const deletedDeal = await Deal.findByIdAndDelete(req.params.id);
-
-//     if (!deletedDeal) {
-//       return res.status(404).json({ message: "Deal not found" });
-//     }
-
-//     res.json({ message: "Deal deleted successfully" });
-
-//   } catch (err) {
-//     console.error("Delete Deal Error:", err);
-//     res.status(500).json({ message: "Failed to delete deal", error: err.message });
-//   }
-// };
