@@ -50,7 +50,7 @@ await Product.updateMany(
   { _id: { $in: productIds } },
   { 
     $set: { 
-      status: "Sold",
+      status: "On Hold",
       statusDate: new Date()
     } 
   }
@@ -104,19 +104,43 @@ exports.updateDeal = async (req, res) => {
       return res.status(404).json({ message: "Deal not found" });
     }
 // 🔥 ADD THIS BLOCK
-if (products) {
-  const productIds = products.map(p => p.productId);
+// 🔥 HANDLE PRODUCT STATUS BASED ON DEAL STATUS
+if (status || products) {
+
+  // get product ids (new ya existing deal se)
+  const productIds = products
+    ? products.map(p => p.productId)
+    : updatedDeal.products.map(p => p.productId);
+
+  let productStatus = "On Hold";
+
+  if (status === "Completed") {
+    productStatus = "Sold";
+  }
 
   await Product.updateMany(
     { _id: { $in: productIds } },
-    { 
-      $set: { 
-        status: "Sold",
+    {
+      $set: {
+        status: productStatus,
         statusDate: new Date()
-      } 
+      }
     }
   );
 }
+// if (products) {
+//   const productIds = products.map(p => p.productId);
+
+//   await Product.updateMany(
+//     { _id: { $in: productIds } },
+//     { 
+//       $set: { 
+//         status: "On Hold",
+//         statusDate: new Date()
+//       } 
+//     }
+//   );
+// }
     res.json(updatedDeal);
 
   } catch (err) {
@@ -125,23 +149,58 @@ if (products) {
   }
 };
 
-//  Delete deal
+//  Delete deal base on state
+
 exports.deleteDeal = async (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
     return res.status(400).json({ message: "Invalid deal ID" });
   }
 
   try {
-    const deletedDeal = await Deal.findByIdAndDelete(req.params.id);
 
-    if (!deletedDeal) {
+    const deal = await Deal.findById(req.params.id);
+
+    if (!deal) {
       return res.status(404).json({ message: "Deal not found" });
     }
 
-    res.json({ message: "Deal deleted successfully" });
+    const productIds = deal.products.map(p => p.productId);
+
+    await Product.updateMany(
+      { _id: { $in: productIds } },
+      {
+        $set: {
+          status: "Available",
+          statusDate: null
+        }
+      }
+    );
+
+    await Deal.findByIdAndDelete(req.params.id);
+
+    res.json({ message: "Deal deleted & products updated successfully" });
 
   } catch (err) {
     console.error("Delete Deal Error:", err);
     res.status(500).json({ message: "Failed to delete deal", error: err.message });
   }
 };
+// exports.deleteDeal = async (req, res) => {
+//   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+//     return res.status(400).json({ message: "Invalid deal ID" });
+//   }
+
+//   try {
+//     const deletedDeal = await Deal.findByIdAndDelete(req.params.id);
+
+//     if (!deletedDeal) {
+//       return res.status(404).json({ message: "Deal not found" });
+//     }
+
+//     res.json({ message: "Deal deleted successfully" });
+
+//   } catch (err) {
+//     console.error("Delete Deal Error:", err);
+//     res.status(500).json({ message: "Failed to delete deal", error: err.message });
+//   }
+// };
