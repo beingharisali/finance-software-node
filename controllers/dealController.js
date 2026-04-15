@@ -2,6 +2,7 @@
 
 const Deal = require("../models/Deal");
 const mongoose = require("mongoose");
+const Product = require("../models/Product");
 
 //  Get all deals
 exports.getDeals = async (req, res) => {
@@ -38,8 +39,24 @@ exports.createDeal = async (req, res) => {
       commission: commission || 0,
     });
 
+    // const savedDeal = await newDeal.save();
+    // res.status(201).json(savedDeal);
     const savedDeal = await newDeal.save();
-    res.status(201).json(savedDeal);
+
+
+const productIds = products.map(p => p.productId);
+
+await Product.updateMany(
+  { _id: { $in: productIds } },
+  { 
+    $set: { 
+      status: "Sold",
+      statusDate: new Date()
+    } 
+  }
+);
+
+res.status(201).json(savedDeal);
   } catch (err) {
     console.error("Create Deal Error:", err);
     res.status(500).json({ message: "Failed to create deal", error: err.message });
@@ -86,7 +103,20 @@ exports.updateDeal = async (req, res) => {
     if (!updatedDeal) {
       return res.status(404).json({ message: "Deal not found" });
     }
+// 🔥 ADD THIS BLOCK
+if (products) {
+  const productIds = products.map(p => p.productId);
 
+  await Product.updateMany(
+    { _id: { $in: productIds } },
+    { 
+      $set: { 
+        status: "Sold",
+        statusDate: new Date()
+      } 
+    }
+  );
+}
     res.json(updatedDeal);
 
   } catch (err) {
