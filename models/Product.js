@@ -1,25 +1,25 @@
 
 const mongoose = require("mongoose");
 
-
 const productSchema = new mongoose.Schema(
   {
-    productId: { type: String, unique: true, required: true },
-
+    productId: { type: String, index: true, default: null }, 
     liquidMake: String,
-    product: { type: Date, required: true }, 
+    product: { type: Date, required: false },
     caskNo: String,
     vessel: String,
-    lAlc: Number,
-    volPercent: Number,
-    costPrice: Number,
-    supplierPrice: Number,
-    finalPrice: Number,
+    lAlc: { type: Number, default: 0 },
+    volPercent: { type: Number, default: 0 },
+    costPrice: { type: Number, default: 0 },
+    location: String,
+    bottles: { type: Number, default: 0 },
+    supplierPrice: { type: Number, default: 0 },
+    finalPrice: { type: Number, default: 0 },
     status: { type: String, default: "Available" },
     allocatedBroker: { type: String, default: "" },
     statusDate: { type: Date, default: null }
   },
   { timestamps: true }
 );
-productSchema.index({ productId: 1, caskNo: 1 }, { unique: true });
+
 module.exports = mongoose.model("Product", productSchema);

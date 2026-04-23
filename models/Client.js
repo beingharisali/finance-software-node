@@ -2,19 +2,20 @@ const mongoose = require("mongoose");
 
 const clientSchema = new mongoose.Schema(
   {
-    clientNumber: { type: Number, unique: true }, 
+    clientNumber: { type: Number, unique: true },
     firstName: { type: String, required: true, trim: true },
     lastName: { type: String, required: true, trim: true },
-    dateOfBirth: { type: Date, required: true },
+    dateOfBirth: { type: Date, default: "" },
     phoneNumber: { type: String, required: true },
+    broker: { type: String, default: "" },
     email: { type: String, required: true, lowercase: true, trim: true },
-    address: { type: String, required: true },
+
+    address: { type: String, default: "" },
     extraInfo: { type: String, default: "" },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-// Auto-increment clientNumber
 clientSchema.pre("save", async function (next) {
   if (this.isNew) {
     const lastClient = await mongoose

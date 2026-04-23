@@ -23,33 +23,16 @@ const importClients = async (req, res) => {
 
         for (const [index, row] of results.entries()) {
           try {
-            // Trim CSV values
-            const firstName = row["First Name"]?.trim() || "";
-            const lastName = row["Last Name"]?.trim() || "";
-            const email = row["Email"]?.trim().toLowerCase() || "";
-            const phoneNumber = row["Phone Number"]?.trim() || "";
-            const address = row["Address"]?.trim() || "";
-            const extraInfo = row["Extra Info"]?.trim() || "";
-            const dob = row["Date of Birth"]
-              ? new Date(row["Date of Birth"])
-              : null;
+            const firstName = (row["First Name"] || "").trim();
+            const lastName = (row["Last Name"] || "").trim();
+            const email = (row["Email"] || "").trim().toLowerCase();
+            const phoneNumber = (row["Phone Number"] || "").trim();
+            const address = (row["Address"] || "").trim();
+            const broker = (row["Broker"] || "").trim();
+            const extraInfo = (row["Extra Info"] || "").trim();
 
-            // Skip if required fields missing
-            if (
-              !firstName ||
-              !lastName ||
-              !email ||
-              !phoneNumber ||
-              !address ||
-              !dob
-            ) {
-              console.error(
-                `Skipped row ${index + 1}: missing required field`,
-                row,
-              );
-              skippedCount++;
-              continue;
-            }
+            const dobRaw = row["Date of Birth"];
+            const dob = dobRaw ? new Date(dobRaw) : null;
 
             // Skip if email already exists
             const existing = await Client.findOne({ email });
@@ -73,6 +56,7 @@ const importClients = async (req, res) => {
               phoneNumber,
               address,
               extraInfo,
+              broker,
               dateOfBirth: dob,
             });
 
@@ -103,33 +87,15 @@ const importClients = async (req, res) => {
   }
 };
 
-// Get all clients
-// const getClients = async (req, res) => {
-//   try {
-
-//     const clients = await Client.find().sort({ clientNumber: 1 });
-//     // Add deals count for each client
-//       const clientsWithDealsCount = await Promise.all(
-//         clients.map(async (client) => {
-//           const dealsCount = await Deal.countDocuments({ clientNumber: client.clientNumber });
-//           return { ...client.toObject(), dealsCount }; // Add dealsCount field
-//         })
-//       );
-//     res.json(clients);
-//   } catch (err) {
-//     res.status(500).json({ msg: err.message });
-//   }
-// };
 const getClients = async (req, res) => {
   try {
     const clients = await Client.find().sort({ clientNumber: 1 });
 
     const clientsWithDealsCount = await Promise.all(
       clients.map(async (client) => {
-
         const dealsCount = await Deal.countDocuments({ client: client._id });
         return { ...client.toObject(), dealsCount };
-      })
+      }),
     );
 
     res.json(clientsWithDealsCount); // send clients with dealsCount
@@ -209,14 +175,6 @@ const getClientDeals = async (req, res) => {
   }
 };
 
-// module.exports = {
-//   importClients,
-//   createClient,
-//   getClients,
-//   updateClient,
-//   deleteClient,
-
-// };
 module.exports = {
   importClients,
   createClient,
