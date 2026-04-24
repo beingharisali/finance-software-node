@@ -17,6 +17,11 @@ router.post(
   uploads.single("file"),
   productController.importProduct
 );
+router.post(
+  "/importCertification",
+  uploads.single("file"),
+  productController.importCertification
+);
 
 router.get("/all", productController.getProducts);
 // New PATCH route
