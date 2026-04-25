@@ -24,6 +24,7 @@ router.post(
 );
 
 router.get("/all", productController.getProducts);
+router.get("/allCertifications", productController.getCertifications);
 // New PATCH route
 router.patch("/:id/allocate", allocateBroker);
 // status
