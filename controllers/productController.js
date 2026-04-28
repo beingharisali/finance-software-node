@@ -46,6 +46,30 @@ const parseExcelDate = (value) => {
 
   return null;
 };
+const updateCertificationStatus = async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  try {
+    const cert = await Certification.findByIdAndUpdate(
+      id,
+      { status, statusDate: new Date() },
+      { new: true }
+    );
+
+    if (!cert) {
+      return res.status(404).json({ msg: "Certification not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: cert,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: "Failed to update status" });
+  }
+};
 // Import products from Excel
 const importProduct = async (req, res) => {
   try {
@@ -179,6 +203,32 @@ const updateStatus = async (req, res) => {
     res.status(500).json({ success: false, msg: "Failed to update status" });
   }
 };
+const allocateCertification = async (req, res) => {
+  const { id } = req.params;
+  const { brokerId } = req.body;
+
+  try {
+    const cert = await Certification.findById(id);
+
+    if (!cert) {
+      return res.status(404).json({ msg: "Certification not found" });
+    }
+
+    cert.allocatedBroker = brokerId || "";
+    cert.status = brokerId ? "On Hold" : "Available";
+    cert.statusDate = new Date();
+
+    await cert.save();
+
+    res.status(200).json({
+      success: true,
+      data: cert,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: "Allocation failed" });
+  }
+};
 
 // Allocate broker to product
 const allocateBroker = async (req, res) => {
@@ -227,7 +277,7 @@ const importCertification = async (req, res) => {
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
 
-    // defval: null use karein taake undefined error na aaye
+
     const rows = XLSX.utils.sheet_to_json(worksheet, { defval: null });
 
     if (!rows.length) {
@@ -235,26 +285,25 @@ const importCertification = async (req, res) => {
     }
 
     // DEBUG: Show raw CSV column names and first row
-    console.log("=== RAW CSV COLUMNS ===", Object.keys(rows[0]));
-    console.log("=== FIRST RAW ROW ===", JSON.stringify(rows[0], null, 2));
+    // console.log("=== RAW CSV COLUMNS ===", Object.keys(rows[0]));
+    // console.log("=== FIRST RAW ROW ===", JSON.stringify(rows[0], null, 2));
 
     const certificationData = rows.map((row, index) => {
       const certNo = getValue(row, ["Certificate #", "Cert No", "CERT NO", "certification"]);
-      
-      // DEBUG: Show raw price values from each row
+
       if (index < 3) {
         console.log(`=== ROW ${index} RAW DATA ===`, JSON.stringify(row));
       }
       
       const cleanPrice = (val) => {
         if (val === undefined || val === null || val === "") return 0;
-        // Remove everything except digits and dots (handles £, $, commas, spaces)
+
         const cleaned = String(val).replace(/[^\d.]/g, "");
         return parseFloat(cleaned) || 0;
       };
 
       return {
-        // Trim karke check karein, agar khali hai toh null rakhein
+    
         certification: certNo && String(certNo).trim() !== "" ? String(certNo).trim() : null, 
         denomination: getValue(row, ["Denomination", "denomination", "DENOMINATION"]) || "",
         year: parseInt(getValue(row, ["Year", "year", "YEAR"])) || 0,
@@ -265,8 +314,6 @@ const importCertification = async (req, res) => {
       };
     });
 
-    // --- FIX: Filter out null or empty certifications ---
-    // Kyunki database unique index empty/null ko duplicate manta hai
     const validData = certificationData.filter((c) => c.certification !== null);
 
     if (!validData.length) {
@@ -286,8 +333,7 @@ const importCertification = async (req, res) => {
       (c) => !existingSet.has(c.certification)
     );
 
-    // DEBUG: Show data just before saving to database
-    console.log("=== DATA BEFORE DB INSERT ===", JSON.stringify(filteredData.slice(0, 3), null, 2));
+    // console.log("=== DATA BEFORE DB INSERT ===", JSON.stringify(filteredData.slice(0, 3), null, 2));
 
     if (filteredData.length > 0) {
       await Certification.insertMany(filteredData);
@@ -299,7 +345,7 @@ const importCertification = async (req, res) => {
     });
   } catch (error) {
     console.error("Certification import error:", error);
-    // Duplicate error ko handle karein gracefully
+
     if (error.code === 11000) {
         return res.status(400).json({ success: false, msg: "Duplicate certification number found in file or database." });
     }
@@ -330,6 +376,7 @@ module.exports = {
   updateStatus,
   importCertification,
   getCertifications,
+    updateCertificationStatus, 
+      allocateCertification,
 };
 
-// fix
