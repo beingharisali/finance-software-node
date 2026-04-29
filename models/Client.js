@@ -32,7 +32,7 @@ const mongoose = require("mongoose");
 
 const clientSchema = new mongoose.Schema(
   {
-    clientNumber: { type: String, unique: true }, // ⚡ IMPORTANT: STRING (SC001)
+    clientNumber: { type: String, unique: true }, 
     firstName: { type: String, required: true, trim: true },
     lastName: { type: String, required: true, trim: true },
     dateOfBirth: { type: Date, default: "" },
