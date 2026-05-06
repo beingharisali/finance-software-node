@@ -12,30 +12,10 @@ const escapeRegex = (text) => {
   return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 };
     // Filter by category
-   
-//     if (category && category.trim() !== "") {
-//   // filter.$or = [
-//   //   { category: { $regex: category.trim(), $options: "i" } },
-//   //   { transactionType: { $regex: category.trim(), $options: "i" } },
-//   // ];
-//   filter.$or = [
-//   { category: { $regex: category.trim(), $options: "i" } },
-//   { transactionDescription: { $regex: category.trim(), $options: "i" } },
-// ];
-// }
-// if (search && search.trim() !== "") {
-//   const words = search.trim().split(/\s+/); // split by space
-
-//   filter.$and = words.map((word) => ({
-//     transactionDescription: {
-//       $regex: escapeRegex(word),
-//       $options: "i",
-//     },
-//   }));
-// }
+ 
 let conditions = [];
 
-// ✅ CATEGORY FILTER
+// CATEGORY FILTER
 if (category && category.trim() !== "") {
   conditions.push({
     $or: [
